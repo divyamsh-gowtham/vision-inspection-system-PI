@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.log
+
+# Site data, learned on this machine against its own camera and belt:
+# gate position, empty-belt reference, run tally, thresholds.
+config/
+
+# Recent pack frames written by the reader for tuning (ring of 6).
+debug/
+
+# TensorRT engines are tied to the TensorRT version and the GPU: built on the
+# box by models/build.sh, never committed. Build logs likewise.
+models/*.engine
+models/build_*.log
+models/build_status.txt
