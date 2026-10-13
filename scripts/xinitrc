@@ -1,0 +1,22 @@
+#!/bin/sh
+# X session for the ProInspect appliance. Started by proinspect.service via
+# xinit; there is no window manager and no desktop - the kiosk window is the
+# entire session.
+
+# A production panel must never blank, dim, or sleep.
+xset s off
+xset s noblank
+xset -dpms
+
+# Nothing here should be interactive, so blank the root window to the HMI
+# ground colour: this is what shows during the moment before first paint.
+xsetroot -solid "#E8EDF1" 2>/dev/null
+
+# xinit does not pass the client's stdout through to the service, so the
+# kiosk's own diagnostics never reach the journal. Send them to a file
+# instead, truncated each start so it stays bounded on the SD card.
+LOG=/home/jark/proinspect/kiosk.log
+: > "$LOG"
+# Touchscreen panel: no pointer to show.
+# Pointer shown temporarily (asked 2026-09-27); restore --hide-cursor for the touchscreen.
+exec python3 /home/jark/proinspect/kiosk.py >> "$LOG" 2>&1

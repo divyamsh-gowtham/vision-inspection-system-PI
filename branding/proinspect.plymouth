@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=ProInspect
+Description=ProInspect appliance boot splash
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/proinspect
+ScriptFile=/usr/share/plymouth/themes/proinspect/proinspect.script

@@ -1,0 +1,4 @@
+rec exit 0
+cls exit 1
+det exit 0
+done

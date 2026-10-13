@@ -1,0 +1,64 @@
+// ProInspect boot splash.
+// Centres the wordmark on the HMI ground colour (light) and runs three pulsing dots
+// beneath it, so the panel shows the product from firmware handover onward
+// and never reveals the operating system underneath.
+
+Window.SetBackgroundTopColor(0.949, 0.961, 0.969);      // #F2F5F7
+Window.SetBackgroundBottomColor(0.949, 0.961, 0.969);
+
+screen_w = Window.GetWidth();
+screen_h = Window.GetHeight();
+
+logo.image  = Image("logo.png");
+logo.sprite = Sprite(logo.image);
+logo.x = (screen_w - logo.image.GetWidth())  / 2;
+logo.y = (screen_h - logo.image.GetHeight()) / 2 - 40;
+logo.sprite.SetPosition(logo.x, logo.y, 0);
+
+// --- progress dots -------------------------------------------------------
+dot.image = Image("dot.png");
+num_dots  = 3;
+spacing   = 26;
+dots_w    = (num_dots - 1) * spacing;
+dot_y     = logo.y + logo.image.GetHeight() + 46;
+
+for (i = 0; i < num_dots; i++) {
+    d[i].sprite = Sprite(dot.image);
+    d[i].sprite.SetPosition((screen_w - dots_w) / 2 + i * spacing, dot_y, 1);
+    d[i].sprite.SetOpacity(0.2);
+}
+
+progress = 0;
+fun RefreshCallback() {
+    progress++;
+    for (i = 0; i < num_dots; i++) {
+        // staggered sine so the dots chase one another
+        phase = (progress / 14) - (i * 0.7);
+        o = (Math.Sin(phase) + 1) / 2;
+        d[i].sprite.SetOpacity(0.15 + o * 0.85);
+    }
+}
+Plymouth.SetRefreshFunction(RefreshCallback);
+
+// --- status line ---------------------------------------------------------
+// Only shown when plymouth has something the operator must act on, such as a
+// filesystem check or a passphrase prompt. Routine boot stays silent.
+status_y = dot_y + 60;
+fun ShowMessage(text) {
+    msg.image  = Image.Text(text, 0.36, 0.44, 0.49);
+    msg.sprite = Sprite(msg.image);
+    msg.sprite.SetPosition((screen_w - msg.image.GetWidth()) / 2, status_y, 2);
+}
+
+fun MessageCallback(text)  { ShowMessage(text); }
+fun DisplayNormalCallback(){ if (msg.sprite) msg.sprite.SetOpacity(0); }
+
+Plymouth.SetMessageFunction(MessageCallback);
+Plymouth.SetDisplayNormalFunction(DisplayNormalCallback);
+
+// Hand the screen over cleanly to the kiosk's X server.
+fun QuitCallback() {
+    logo.sprite.SetOpacity(0);
+    for (i = 0; i < num_dots; i++) { d[i].sprite.SetOpacity(0); }
+}
+Plymouth.SetQuitFunction(QuitCallback);

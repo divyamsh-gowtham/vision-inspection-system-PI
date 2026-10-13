@@ -1,0 +1,42 @@
+[Unit]
+Description=ProInspect HMI (kiosk)
+Documentation=file:/home/jark/proinspect/README.md
+# Wait for the boot splash to release the console, then own tty1 outright.
+After=systemd-user-sessions.service plymouth-quit-wait.service
+Conflicts=getty@tty1.service
+After=getty@tty1.service
+
+[Service]
+Type=simple
+User=jark
+Group=jark
+PAMName=login
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+StandardInput=tty
+StandardOutput=journal
+StandardError=journal
+UtmpIdentifier=tty1
+UtmpMode=user
+
+WorkingDirectory=/home/jark/proinspect
+Environment=HOME=/home/jark
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=GDK_BACKEND=x11
+# Without this the kiosk's stdout is block-buffered behind xinit and its
+# diagnostics never reach the journal.
+Environment=PYTHONUNBUFFERED=1
+# Silence WebKit's compositing warnings on Tegra's driver.
+# GPU compositing left on: the HMI animates, and software fallback crawls.
+# Re-add WEBKIT_DISABLE_COMPOSITING_MODE=1 if the Tegra driver misbehaves.
+
+ExecStart=/usr/bin/xinit /home/jark/proinspect/scripts/xinitrc -- :0 vt1 -nolisten tcp -keeptty
+
+# An inspection station that dies must come back on its own.
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=graphical.target

@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProInspect &middot; Settings</title>
+<link rel="icon" href="logo-icon.png">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  .work{display:grid;gap:6px;overflow:hidden;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);grid-template-rows:minmax(0,1fr) auto}
+  .t td.num .u{color:var(--ink-dim);font-family:var(--sans);font-size:11px;margin-left:2px}
+  .meterbar{height:8px;width:90px;background:var(--field);border:1px solid var(--line);position:relative;display:inline-block;vertical-align:middle}
+  .meterbar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--off-bg)}
+  .chart-wrap{position:relative;flex:1;min-height:120px;background:var(--field);border-bottom:1px solid var(--line)}
+  canvas{width:100%;height:100%;display:block}
+  .chart-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;
+    font-size:11px;font-weight:700;letter-spacing:.05em;color:var(--off)}
+  .legend{display:flex;gap:14px;padding:3px 8px;font-size:11px;color:var(--ink-dim);border-bottom:1px solid var(--line-soft)}
+  .legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:4px;background:#1F4E79}
+  .legend i.gpu{background:#7A4F00}
+  .span2{grid-column:1 / -1}
+</style>
+</head>
+<body data-nav="settings" data-title="SETTINGS">
+
+<header class="hdr" id="hdr"></header>
+<aside class="side" id="side"></aside>
+
+<main class="main">
+  <div class="pagebar">
+    <a class="btn sm" href="index.html">&lt; OVERVIEW</a>
+    <span class="pt">SETTINGS</span>
+    <span class="pc">Device health and system information</span>
+    <span class="sp"></span>
+    <span class="k">Telemetry</span><span class="tag" id="connectionStatus">NOT CONNECTED</span>
+    <button class="btn sm" id="refreshButton" type="button">REFRESH</button>
+  </div>
+
+  <div class="work">
+    <!-- device health -->
+    <section class="pnl">
+      <div class="ph">DEVICE HEALTH <span class="sp"></span><span class="note" id="lastUpdated">NOT YET UPDATED</span></div>
+      <table class="t">
+        <thead><tr><th>MEASUREMENT</th><th class="num">VALUE</th><th>LOAD</th><th>DETAIL</th></tr></thead>
+        <tbody>
+          <tr><td>CPU temperature</td><td class="num" id="cpuTemp"></td><td></td><td class="muted" id="cpuTempLabel">Waiting for telemetry</td></tr>
+          <tr><td>GPU temperature</td><td class="num" id="gpuTemp"></td><td></td><td class="muted" id="gpuTempLabel">Waiting for telemetry</td></tr>
+          <tr><td>CPU utilisation</td><td class="num" id="cpuUsage"></td><td><span class="meterbar"><i id="cpuBar"></i></span></td><td class="muted">Overall processor load</td></tr>
+          <tr><td>GPU utilisation</td><td class="num" id="gpuUsage"></td><td><span class="meterbar"><i id="gpuBar"></i></span></td><td class="muted">Device GPU load</td></tr>
+          <tr><td>Memory</td><td class="num" id="ramUsage"></td><td><span class="meterbar"><i id="ramBar"></i></span></td><td class="muted" id="ramDetail">Waiting for telemetry</td></tr>
+          <tr><td>Disk</td><td class="num" id="diskUsage"></td><td><span class="meterbar"><i id="diskBar"></i></span></td><td class="muted">Filesystem capacity</td></tr>
+          <tr><td>Power</td><td class="num" id="powerUsage"></td><td></td><td class="muted">Board input</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- temperature trend -->
+    <section class="pnl">
+      <div class="ph">TEMPERATURE TREND <span class="sp"></span><span class="tag" id="thermalStatus">WAITING FOR DATA</span></div>
+      <div class="legend"><span><i></i>CPU</span><span><i class="gpu"></i>GPU</span><span class="sp"></span><span id="chartFootnote">Last 15 min while this page is open. No sample temperatures are generated.</span></div>
+      <div class="chart-wrap">
+        <canvas id="thermalChart" role="img" aria-label="CPU and GPU temperature history"></canvas>
+        <div class="chart-empty" id="chartEmpty">NO SENSOR READINGS. THE TREND APPEARS WHEN REAL READINGS ARRIVE.</div>
+      </div>
+    </section>
+
+    <!-- system information -->
+    <section class="pnl span2">
+      <div class="ph">SYSTEM INFORMATION</div>
+      <table class="t">
+        <thead><tr><th>ITEM</th><th>VALUE</th><th>SOURCE</th><th>ITEM</th><th>VALUE</th><th>SOURCE</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Station</td><td class="mono" id="sysUnit">&mdash;</td><td class="muted">kiosk host</td>
+            <td>Counter service</td><td id="serviceStatus"><span class="tag">UNKNOWN</span></td><td class="muted">/status</td>
+          </tr>
+          <tr>
+            <td>Software version</td><td class="mono" id="sysVer">&mdash;</td><td class="muted">kiosk host</td>
+            <td>Camera</td><td id="sysCam"><span class="na">UNKNOWN</span></td><td class="muted">/status</td>
+          </tr>
+          <tr>
+            <td>Device</td><td id="deviceName">Jetson Orin Nano</td><td class="muted">fixed text</td>
+            <td>Camera focus</td><td class="mono" id="sysFocus"><span class="na">UNKNOWN</span></td><td class="muted">/status</td>
+          </tr>
+          <tr>
+            <td>Telemetry source</td><td id="telemetrySrc"><span class="na">NOT CONFIGURED</span></td><td class="muted">TELEMETRY_URL</td>
+            <td>OCR engine</td><td id="sysEng"><span class="na">UNKNOWN</span></td><td class="muted">/status</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="notice" id="telemetryNotice" role="status" aria-live="polite" style="border-width:1px 0 0">
+        Live telemetry has not been configured. The page will not display invented sensor readings.
+        Connect a separate read-only Jetson telemetry API to populate these fields and the trend.
+      </div>
+    </section>
+  </div>
+</main>
+
+<script src="shell.js"></script>
+<script>
+  "use strict";
+
+  /*
+    Settings frontend.
+    No telemetry endpoint is configured yet, and no fake readings are
+    generated. When a separate read-only telemetry backend exists, set
+    TELEMETRY_URL to its endpoint and match the JSON fields read in
+    updateDashboard():
+      cpu.temperature_c, cpu.utilization_percent, gpu.temperature_c,
+      gpu.utilization_percent, memory.used_bytes, memory.total_bytes,
+      disk.used_percent, power.watts, timestamp
+  */
+  const TELEMETRY_URL = "";
+
+  const HISTORY_WINDOW_MS = 15 * 60 * 1000;
+  const MAX_HISTORY_POINTS = 300;
+  const REFRESH_INTERVAL_MS = 3000;
+
+  const history = [];
+  let requestInProgress = false;
+
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("thermalChart");
+  const context = canvas.getContext("2d");
+
+  const TAG = { good: "ok", bad: "fail", warn: "warn", "": "" };
+  function setPill(element, label, state = "") {
+    element.className = "tag " + (TAG[state] || "");
+    element.textContent = label.toUpperCase();
+  }
+
+  function setMetric(id, value, unit = "") {
+    const element = $(id);
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      element.innerHTML = '<span class="na">NOT CONNECTED</span>';
+      return;
+    }
+    element.textContent = Number(value.toFixed(1)).toString();
+    if (unit) {
+      const u = document.createElement("span");
+      u.className = "u";
+      u.textContent = unit;
+      element.append(u);
+    }
+  }
+
+  function setProgress(id, value) {
+    const element = $(id);
+    const ok = typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+    element.style.width = ok ? value + "%" : "0%";
+    element.style.background = !ok ? "" : value >= 90 ? "var(--fail-bg)" : value >= 75 ? "var(--warn-bg)" : "var(--ok-bg)";
+  }
+
+  function formatBytes(bytes) {
+    if (typeof bytes !== "number" || !Number.isFinite(bytes)) return "—";
+    return (bytes / (1024 ** 3)).toFixed(1) + " GB";
+  }
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.round(rect.width * dpr));
+    canvas.height = Math.max(1, Math.round(rect.height * dpr));
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+    drawThermalChart();
+  }
+
+  function drawThermalChart() {
+    const rect = canvas.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    if (!width || !height) return;
+    context.clearRect(0, 0, width, height);
+
+    const hasData = history.some(point => Number.isFinite(point.cpu) || Number.isFinite(point.gpu));
+    $("chartEmpty").hidden = hasData;
+    if (!hasData) {
+      setPill($("thermalStatus"), "Waiting for data");
+      return;
+    }
+
+    const left = 38, right = 12, top = 10, bottom = 22;
+    const plotWidth = width - left - right;
+    const plotHeight = height - top - bottom;
+    const values = history.flatMap(point => [point.cpu, point.gpu].filter(Number.isFinite));
+    let min = Math.floor(Math.min(...values) / 5) * 5;
+    let max = Math.ceil(Math.max(...values) / 5) * 5;
+    if (max - min < 10) { min -= 5; max += 5; }
+
+    const x = index => left + (index / Math.max(1, history.length - 1)) * plotWidth;
+    const y = value => top + ((max - value) / (max - min)) * plotHeight;
+
+    context.font = "11px 'IBM Plex Mono', monospace";
+    context.textAlign = "right";
+    context.textBaseline = "middle";
+    context.fillStyle = "#565B60";
+    context.strokeStyle = "#BCC0C4";
+    context.lineWidth = 1;
+    const ticks = 4;
+    for (let i = 0; i <= ticks; i++) {
+      const value = min + ((max - min) * i / ticks);
+      const py = Math.round(y(value)) + 0.5;
+      context.beginPath();
+      context.moveTo(left, py);
+      context.lineTo(width - right, py);
+      context.stroke();
+      context.fillText(Math.round(value) + "°", left - 6, py);
+    }
+
+    function drawSeries(key, color) {
+      const points = history.map((point, index) => ({ point, index })).filter(item => Number.isFinite(item.point[key]));
+      if (points.length === 0) return;
+      context.beginPath();
+      context.strokeStyle = color;
+      context.lineWidth = 1.5;
+      points.forEach((item, i) => {
+        const px = x(item.index), py = y(item.point[key]);
+        if (i === 0) context.moveTo(px, py); else context.lineTo(px, py);
+      });
+      context.stroke();
+    }
+    drawSeries("cpu", "#1F4E79");
+    drawSeries("gpu", "#7A4F00");
+
+    context.textAlign = "center";
+    context.textBaseline = "top";
+    const firstTime = history[0] && history[0].time;
+    const lastTime = history[history.length - 1] && history[history.length - 1].time;
+    if (firstTime) context.fillText(App.hms(new Date(firstTime)), left + 24, height - 16);
+    if (lastTime) context.fillText(App.hms(new Date(lastTime)), width - right - 24, height - 16);
+
+    setPill($("thermalStatus"), "Recording", "good");
+  }
+
+  function readNumber(value) {
+    return typeof value === "number" && Number.isFinite(value) ? value : null;
+  }
+
+  function updateDashboard(data) {
+    const cpuTemp = readNumber(data?.cpu?.temperature_c);
+    const gpuTemp = readNumber(data?.gpu?.temperature_c);
+    const cpuUsage = readNumber(data?.cpu?.utilization_percent);
+    const gpuUsage = readNumber(data?.gpu?.utilization_percent);
+    const ramUsed = readNumber(data?.memory?.used_bytes);
+    const ramTotal = readNumber(data?.memory?.total_bytes);
+    const diskUsage = readNumber(data?.disk?.used_percent);
+    const watts = readNumber(data?.power?.watts);
+
+    const parsedTime = data?.timestamp ? new Date(data.timestamp) : new Date();
+    const sampleTime = Number.isFinite(parsedTime.getTime()) ? parsedTime.getTime() : Date.now();
+
+    setMetric("cpuTemp", cpuTemp, "°C");
+    setMetric("gpuTemp", gpuTemp, "°C");
+    $("cpuTempLabel").textContent = cpuTemp === null ? "Unavailable" : "Processor thermal sensor";
+    $("gpuTempLabel").textContent = gpuTemp === null ? "Unavailable" : "GPU thermal sensor";
+    setMetric("cpuUsage", cpuUsage, "%");
+    setMetric("gpuUsage", gpuUsage, "%");
+    setProgress("cpuBar", cpuUsage);
+    setProgress("gpuBar", gpuUsage);
+
+    if (ramUsed !== null && ramTotal !== null && ramTotal > 0) {
+      const ramPercent = (ramUsed / ramTotal) * 100;
+      setMetric("ramUsage", ramPercent, "%");
+      $("ramDetail").textContent = formatBytes(ramUsed) + " used of " + formatBytes(ramTotal);
+      setProgress("ramBar", ramPercent);
+    } else {
+      setMetric("ramUsage", null, "%");
+      $("ramDetail").textContent = "Unavailable";
+      setProgress("ramBar", null);
+    }
+
+    setMetric("diskUsage", diskUsage, "%");
+    setProgress("diskBar", diskUsage);
+    setMetric("powerUsage", watts, "W");
+
+    if (cpuTemp !== null || gpuTemp !== null) {
+      history.push({ time: sampleTime, cpu: cpuTemp, gpu: gpuTemp });
+      const cutoff = Date.now() - HISTORY_WINDOW_MS;
+      while (history.length && (history[0].time < cutoff || history.length > MAX_HISTORY_POINTS)) {
+        history.shift();
+      }
+    }
+
+    $("lastUpdated").textContent = "UPDATED " + App.hms(new Date());
+    setPill($("connectionStatus"), "Connected", "good");
+    $("telemetryNotice").textContent =
+      "Live telemetry is connected. Values shown are from the configured read-only telemetry endpoint.";
+    drawThermalChart();
+  }
+
+  function showNotConnected() {
+    ["cpuTemp", "gpuTemp", "cpuUsage", "gpuUsage", "ramUsage", "diskUsage", "powerUsage"].forEach(id => setMetric(id, null));
+    $("cpuTempLabel").textContent = "No telemetry source";
+    $("gpuTempLabel").textContent = "No telemetry source";
+    $("ramDetail").textContent = "No telemetry source";
+  }
+
+  async function refreshTelemetry() {
+    if (!TELEMETRY_URL) {
+      setPill($("connectionStatus"), "Not configured", "warn");
+      $("telemetryNotice").textContent =
+        "Live telemetry has not been configured. No sample readings are generated. " +
+        "A separate read-only telemetry endpoint is required to populate these fields and the trend.";
+      return;
+    }
+    if (requestInProgress) return;
+    requestInProgress = true;
+    $("refreshButton").disabled = true;
+    try {
+      const response = await fetch(TELEMETRY_URL, { method: "GET", cache: "no-store", headers: { "Accept": "application/json" } });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      updateDashboard(await response.json());
+    } catch (error) {
+      setPill($("connectionStatus"), "Connection error", "bad");
+      $("telemetryNotice").textContent =
+        "Could not read telemetry. Check that the separate read-only API is running and that its URL and browser access settings are correct.";
+      console.error("Telemetry request failed:", error);
+    } finally {
+      requestInProgress = false;
+      $("refreshButton").disabled = false;
+    }
+  }
+
+  // ---- what the counter service and the kiosk host do report ----
+  App.onStatus(function (s, up) {
+    if (!up || !s) {
+      $("serviceStatus").innerHTML = '<span class="tag fail">NOT RESPONDING</span>';
+      ["sysCam", "sysFocus", "sysEng"].forEach(id => { $(id).innerHTML = '<span class="na">UNKNOWN</span>'; });
+      return;
+    }
+    const cam = s.camera || {};
+    $("serviceStatus").innerHTML = '<span class="tag ok">ONLINE</span>';
+    $("sysCam").innerHTML = cam.online
+      ? '<span class="tag ok">ONLINE</span> ' + App.esc((cam.name || "") + " " + (cam.width || "") + "x" + (cam.height || ""))
+      : '<span class="tag fail">OFFLINE</span> ' + App.esc(cam.error || "");
+    $("sysFocus").textContent = cam.focus != null ? String(cam.focus) : "—";
+    const eng = s.ocr_engine || "";
+    $("sysEng").innerHTML = eng === "gpu" ? '<span class="tag ok">GPU</span> PP-OCRv4 / TensorRT'
+      : eng ? '<span class="tag warn">CPU</span> Tesseract fallback' : '<span class="na">UNKNOWN</span>';
+  });
+  // Mirror the station name and version the kiosk host injects into the header.
+  function mirror(src, dst) {
+    const a = $(src), b = $(dst);
+    if (!a || !b) return;
+    const copy = () => { b.textContent = a.textContent; };
+    copy();
+    new MutationObserver(copy).observe(a, { childList: true, characterData: true, subtree: true });
+  }
+  mirror("unit", "sysUnit");
+  mirror("ver", "sysVer");
+
+  if (!TELEMETRY_URL) {
+    showNotConnected();
+    $("refreshButton").disabled = true;
+    $("refreshButton").title = "No telemetry source is configured";
+  } else {
+    $("telemetrySrc").textContent = TELEMETRY_URL;
+    $("refreshButton").addEventListener("click", refreshTelemetry);
+    setInterval(refreshTelemetry, REFRESH_INTERVAL_MS);
+  }
+  refreshTelemetry();
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+</script>
+</body>
+</html>

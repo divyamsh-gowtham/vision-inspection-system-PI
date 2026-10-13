@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProInspect &middot; Reports</title>
+<link rel="icon" href="logo-icon.png">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="shell.css">
+<style>
+  .work{display:flex;flex-direction:column;gap:6px}
+  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .stats .ro{border-bottom:0}
+  .filters{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:8px;align-items:end;padding:6px 8px;border-bottom:1px solid var(--line)}
+  .lower{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:6px;flex:1;min-height:0}
+  .detail-grid{display:grid;grid-template-columns:auto minmax(0,1fr)}
+  .detail-grid dt,.detail-grid dd{height:24px;line-height:24px;padding:0 8px;border-bottom:1px solid var(--line-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .detail-grid dt{font-size:10.5px;font-weight:600;letter-spacing:.05em;color:var(--ink-dim);text-transform:uppercase}
+  .detail-grid dd{font-family:var(--mono);font-size:12.5px}
+  .note{color:var(--ink-dim);font-size:11.5px;line-height:1.45;padding:6px 8px;user-select:text;-webkit-user-select:text}
+  @media print{
+    .filters,.pagebar .btn,.t td:last-child,.t th:last-child{display:none!important}
+    .lower{display:block}
+  }
+</style>
+</head>
+<body data-nav="reports" data-title="REPORTS">
+
+<header class="hdr" id="hdr"></header>
+<aside class="side" id="side"></aside>
+
+<main class="main">
+  <div class="pagebar">
+    <a class="btn sm" href="index.html">&lt; OVERVIEW</a>
+    <span class="pt">REPORTS</span>
+    <span class="pc">Batch history and quality summary</span>
+    <span class="tag warn">DEMO DATA</span>
+    <span class="sp"></span>
+    <button class="btn sm" id="exportCsv">EXPORT CSV</button>
+    <button class="btn sm" onclick="window.print()">PRINT / PDF</button>
+  </div>
+
+  <div class="work">
+    <div class="notice" role="note">
+      <b>DEMO DATA &mdash; NOT LIVE PRODUCTION RESULTS.</b>
+      Every batch on this page is a sample record. This page does not read the ProInspect backend yet,
+      so nothing here reflects what the machine has inspected.
+    </div>
+
+    <section class="stats">
+      <div class="pnl"><div class="ph">BATCHES RECORDED <span class="sp"></span><span class="note">SAMPLE</span></div>
+        <div class="ro"><span class="k">In current filters</span><span class="v" id="batchTotal">0</span></div></div>
+      <div class="pnl"><div class="ph">UNITS INSPECTED <span class="sp"></span><span class="note">SAMPLE</span></div>
+        <div class="ro"><span class="k">Displayed batches</span><span class="v" id="inspectedTotal">0</span></div></div>
+      <div class="pnl"><div class="ph">ACCEPTED UNITS <span class="sp"></span><span class="note">SAMPLE</span></div>
+        <div class="ro"><span class="k">Sample records</span><span class="v" id="acceptedTotal">0</span></div></div>
+      <div class="pnl"><div class="ph">YIELD <span class="sp"></span><span class="note">SAMPLE</span></div>
+        <div class="ro"><span class="k">Accepted / inspected</span><span class="v" id="yieldTotal">&mdash;</span></div></div>
+    </section>
+
+    <div class="lower">
+      <section class="pnl">
+        <div class="ph">BATCH HISTORY <span class="sp"></span><span class="tag warn">SAMPLE RECORDS</span></div>
+        <div class="filters">
+          <div>
+            <label class="k" for="searchBatch">Search batch or product</label>
+            <input id="searchBatch" placeholder="e.g. BATCH-1001">
+          </div>
+          <div>
+            <label class="k" for="filterStatus">Batch status</label>
+            <select id="filterStatus">
+              <option value="all">All statuses</option>
+              <option value="Closed">Closed</option>
+              <option value="Running">Running</option>
+            </select>
+          </div>
+          <div>
+            <label class="k" for="filterProduct">Product</label>
+            <select id="filterProduct">
+              <option value="all">All products</option>
+            </select>
+          </div>
+          <button class="btn" id="clearFilters">CLEAR</button>
+        </div>
+        <div class="scroll">
+          <table class="t">
+            <thead>
+              <tr>
+                <th>BATCH</th><th>PRODUCT</th><th>RECIPE</th>
+                <th class="num">INSPECTED</th><th class="num">ACCEPTED</th><th class="num">REJECTED</th>
+                <th>STATUS</th><th>REPORT</th>
+              </tr>
+            </thead>
+            <tbody id="batchRows"></tbody>
+          </table>
+        </div>
+        <p class="note" id="recordCount"></p>
+      </section>
+
+      <section class="pnl" id="detailPanel">
+        <div class="ph">BATCH REPORT DETAILS <span class="sp"></span><span class="tag warn">SAMPLE</span></div>
+        <div class="scroll">
+          <p class="note" id="detailMessage">Select VIEW on a batch row to see its report.</p>
+          <div id="batchDetails" hidden>
+            <dl class="detail-grid" id="detailsGrid"></dl>
+            <div class="ph" style="border-top:1px solid var(--line)">INSPECTION AND REJECTION BREAKDOWN</div>
+            <table class="t"><tbody id="reasons"></tbody></table>
+            <p class="note">
+              OCR success rate describes successful text reads. It is separate from
+              product acceptance: a product can be rejected even when OCR reads its
+              code successfully.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <p class="note" style="padding:0 2px">
+      Demonstration page: records above are sample data, not live machine results.
+      Refreshing this page resets any temporary changes. Live history requires
+      connection to the ProInspect backend.
+    </p>
+  </div>
+</main>
+
+<script src="shell.js"></script>
+<script>
+    // Sample records for testing the Reports page.
+    // Replace these with real backend data in a later step.
+    const batches = [
+      {
+        batch: "BATCH-1001",
+        product: "Cadbury Chocolate",
+        recipe: "Chocolate Label v1",
+        start: "2026-10-09 09:00",
+        end: "2026-10-09 09:45",
+        inspected: 500,
+        accepted: 480,
+        rejected: 20,
+        status: "Closed",
+        ocrSuccess: 96.4,
+        reasons: {
+          "MRP mismatch": 8,
+          "Manufacturing date mismatch": 3,
+          "Expiry date mismatch": 4,
+          "Unreadable text": 5,
+          "Other": 0
+        },
+        recipeSnapshot: "Chocolate Label v1 · sample configuration"
+      },
+      {
+        batch: "BATCH-1002",
+        product: "Everest Masala",
+        recipe: "Masala Pack v2",
+        start: "2026-10-09 10:00",
+        end: "2026-10-09 10:30",
+        inspected: 300,
+        accepted: 291,
+        rejected: 9,
+        status: "Closed",
+        ocrSuccess: 98.0,
+        reasons: {
+          "MRP mismatch": 2,
+          "Manufacturing date mismatch": 1,
+          "Expiry date mismatch": 2,
+          "Unreadable text": 3,
+          "Other": 1
+        },
+        recipeSnapshot: "Masala Pack v2 · sample configuration"
+      },
+      {
+        batch: "BATCH-1003",
+        product: "Coca-Cola Can",
+        recipe: "Can Bottom Code v1",
+        start: "2026-10-09 11:00",
+        end: "—",
+        inspected: 120,
+        accepted: 116,
+        rejected: 4,
+        status: "Running",
+        ocrSuccess: 97.5,
+        reasons: {
+          "MRP mismatch": 1,
+          "Manufacturing date mismatch": 1,
+          "Expiry date mismatch": 0,
+          "Unreadable text": 2,
+          "Other": 0
+        },
+        recipeSnapshot: "Can Bottom Code v1 · sample configuration"
+      }
+    ];
+
+    const rows = document.getElementById("batchRows");
+    const search = document.getElementById("searchBatch");
+    const statusFilter = document.getElementById("filterStatus");
+    const productFilter = document.getElementById("filterProduct");
+    const escapeHtml = App.esc;
+
+    function getFilteredBatches() {
+      const query = search.value.trim().toLowerCase();
+      return batches.filter(function (batch) {
+        const matchesSearch =
+          batch.batch.toLowerCase().includes(query) ||
+          batch.product.toLowerCase().includes(query);
+        const matchesStatus =
+          statusFilter.value === "all" || batch.status === statusFilter.value;
+        const matchesProduct =
+          productFilter.value === "all" || batch.product === productFilter.value;
+        return matchesSearch && matchesStatus && matchesProduct;
+      });
+    }
+
+    function render() {
+      const filtered = getFilteredBatches();
+
+      rows.innerHTML = filtered.map(function (batch) {
+        const statusClass = batch.status === "Running" ? "info" : "";
+        return `
+          <tr>
+            <td class="mono"><b>${escapeHtml(batch.batch)}</b></td>
+            <td>${escapeHtml(batch.product)}</td>
+            <td>${escapeHtml(batch.recipe)}</td>
+            <td class="num mono">${batch.inspected}</td>
+            <td class="num mono">${batch.accepted}</td>
+            <td class="num mono">${batch.rejected}</td>
+            <td><span class="tag ${statusClass}">${escapeHtml(batch.status.toUpperCase())}</span></td>
+            <td><button class="btn sm" data-view="${escapeHtml(batch.batch)}">VIEW</button></td>
+          </tr>`;
+      }).join("");
+
+      if (filtered.length === 0) {
+        rows.innerHTML = '<tr><td colspan="8" class="empty">No matching batches found.</td></tr>';
+      }
+
+      const inspected = filtered.reduce((sum, b) => sum + b.inspected, 0);
+      const accepted = filtered.reduce((sum, b) => sum + b.accepted, 0);
+
+      document.getElementById("batchTotal").textContent = filtered.length;
+      document.getElementById("inspectedTotal").textContent = inspected.toLocaleString();
+      document.getElementById("acceptedTotal").textContent = accepted.toLocaleString();
+      document.getElementById("yieldTotal").textContent =
+        inspected ? (accepted / inspected * 100).toFixed(1) + "%" : "—";
+
+      document.getElementById("recordCount").textContent =
+        "Showing " + filtered.length + " of " + batches.length + " sample batches.";
+    }
+
+    function showDetails(batchId) {
+      const batch = batches.find(function (item) { return item.batch === batchId; });
+      if (!batch) return;
+
+      document.getElementById("detailMessage").hidden = true;
+      document.getElementById("batchDetails").hidden = false;
+
+      const duration = batch.end === "—" ? "In progress" : batch.start + " → " + batch.end;
+      const details = [
+        ["Batch number", batch.batch],
+        ["Product", batch.product],
+        ["Recipe snapshot", batch.recipeSnapshot],
+        ["Start → end", duration],
+        ["Rejected units", batch.rejected],
+        ["OCR success rate", batch.ocrSuccess.toFixed(1) + "%"]
+      ];
+
+      document.getElementById("detailsGrid").innerHTML = details.map(function (item) {
+        return `<dt>${escapeHtml(item[0])}</dt><dd title="${escapeHtml(item[1])}">${escapeHtml(item[1])}</dd>`;
+      }).join("");
+
+      document.getElementById("reasons").innerHTML =
+        Object.entries(batch.reasons).map(function (item) {
+          return `<tr><td>${escapeHtml(item[0])}</td><td class="num mono">${item[1]}</td></tr>`;
+        }).join("");
+    }
+
+    function populateProducts() {
+      const products = [...new Set(batches.map(batch => batch.product))];
+      products.forEach(function (product) {
+        const option = document.createElement("option");
+        option.value = product;
+        option.textContent = product;
+        productFilter.appendChild(option);
+      });
+    }
+
+    [search, statusFilter, productFilter].forEach(function (control) {
+      control.addEventListener("input", render);
+      control.addEventListener("change", render);
+    });
+
+    document.getElementById("clearFilters").addEventListener("click", function () {
+      search.value = "";
+      statusFilter.value = "all";
+      productFilter.value = "all";
+      render();
+    });
+
+    rows.addEventListener("click", function (event) {
+      const button = event.target.closest("[data-view]");
+      if (button) showDetails(button.dataset.view);
+    });
+
+    document.getElementById("exportCsv").addEventListener("click", function () {
+      const filtered = getFilteredBatches();
+      const columns = [
+        "Batch number", "Product", "Recipe", "Start", "End",
+        "Inspected", "Accepted", "Rejected", "Status", "OCR success rate"
+      ];
+      const values = filtered.map(function (b) {
+        return [
+          b.batch, b.product, b.recipe, b.start, b.end,
+          b.inspected, b.accepted, b.rejected, b.status,
+          b.ocrSuccess + "%"
+        ];
+      });
+      function csvCell(value) {
+        return '"' + String(value).replace(/"/g, '""') + '"';
+      }
+      const csv = [columns, ...values].map(row => row.map(csvCell).join(",")).join("\r\n");
+      const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "proinspect-batch-reports-DEMO.csv";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    populateProducts();
+    render();
+</script>
+</body>
+</html>

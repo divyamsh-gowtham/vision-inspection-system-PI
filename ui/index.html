@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ProInspect</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .grid{
+    position:relative;z-index:1;flex:1;min-height:0;
+    display:grid;gap:14px;padding:16px 24px;
+    grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);
+  }
+  .tile{
+    position:relative;overflow:hidden;border-radius:var(--r);
+    background:linear-gradient(180deg,#fff 0%,#FBFCFD 100%);
+    border:1px solid var(--line);box-shadow:var(--sh-1);
+    padding:22px 24px;display:flex;flex-direction:column;justify-content:flex-end;
+    /* Hover stays cheap on purpose. Transitioning a large blurred box-shadow or
+       a transform on a full tile costs a software repaint of the whole card;
+       WebKit has no GPU acceleration on this board. */
+    transition:border-color .15s ease, background .15s ease;
+    animation:rise .45s cubic-bezier(.2,.8,.3,1) backwards;
+  }
+  @keyframes rise{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .tile::after{
+    content:"";position:absolute;left:0;top:0;height:2px;width:0;
+    background:linear-gradient(90deg,var(--live),var(--brand));
+    transition:width .3s cubic-bezier(.2,.8,.3,1);
+  }
+  .tile:hover{border-color:#9FB9CB;background:#F7FAFC}
+  .tile:hover::after{width:100%}
+  .tile:hover .gl{opacity:.62}
+  .tile h2{font-size:20px;font-weight:600;letter-spacing:-.45px;line-height:1.15}
+  .tile p{font-size:12.5px;color:var(--ink-dim);margin-top:6px;line-height:1.45;max-width:31ch}
+  /* Sits fully inside the card. Bleeding it off the corner clips the glyph and
+     reads as a rendering fault rather than a watermark. */
+  .tile .gl{
+    position:absolute;top:20px;right:22px;width:104px;height:104px;
+    color:var(--live);opacity:.42;pointer-events:none;transition:opacity .2s ease;
+  }
+  .tile .gl svg{width:100%;height:100%;fill:none;stroke:currentColor;
+    stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .badge{
+    position:absolute;top:18px;left:24px;
+    font-family:var(--mono);font-size:8.5px;font-weight:500;
+    letter-spacing:.17em;text-transform:uppercase;color:var(--ink-dim);
+    background:var(--ground);border:1px solid var(--line-soft);
+    padding:4px 9px;border-radius:6px;
+  }
+
+  .hero{
+    grid-column:span 2;grid-row:span 2;color:#fff;padding:38px 40px;
+    border-color:transparent;
+    background:
+      radial-gradient(120% 90% at 82% 18%, rgba(62,136,176,.42) 0%, transparent 58%),
+      linear-gradient(152deg, var(--brand-lo) 0%, var(--brand) 44%, var(--brand-hi) 100%);
+    box-shadow:0 3px 8px rgba(19,38,53,.2), 0 18px 44px rgba(19,38,53,.2);
+  }
+  .hero::after{display:none}
+  .hero:hover{border-color:transparent}
+  .hero .gl{
+    top:50%;right:44px;transform:translateY(-50%);
+    width:300px;height:300px;color:#fff;opacity:.2;
+  }
+  .hero:hover .gl{opacity:.28}
+  .hero .gl svg{stroke-width:2}
+  .hero .eyebrow{
+    font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.24em;
+    text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:12px;
+  }
+  .hero h2{font-size:42px;font-weight:600;letter-spacing:-1.4px;line-height:1.02}
+  .hero p{color:rgba(255,255,255,.8);font-size:15px;margin-top:13px;max-width:38ch;line-height:1.5}
+  .start{
+    margin-top:26px;align-self:flex-start;display:inline-flex;align-items:center;gap:11px;
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.34);
+    color:#fff;font-family:var(--mono);font-size:12px;font-weight:500;
+    letter-spacing:.14em;text-transform:uppercase;padding:13px 22px;border-radius:11px;
+    transition:background .16s ease,border-color .16s ease;
+  }
+  .hero:hover .start{background:rgba(255,255,255,.26);border-color:rgba(255,255,255,.52)}
+  .start svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2.2}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="station">
+    <div class="t">Vision Inspection Machine</div>
+    <div class="s">Inline OCR &amp; print verification</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="brand">
+    <img class="logo" id="logo" src="logo-icon.png" alt="">
+    <div class="wm">Pro<span>Inspect</span></div>
+  </div>
+  <div class="rule"></div>
+  <div class="clock"><div class="hm" id="hm">--:--</div><div class="dt" id="dt">&mdash;</div></div>
+  <div class="iconbtn pwr" data-power tabindex="0" role="button" aria-label="Power">
+    <svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+  </div>
+</div>
+
+<div class="grid">
+
+  <!-- the only thing an operator touches during a run -->
+  <div class="tile hero" tabindex="0" data-go="products.html" style="animation-delay:0s">
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <path d="M8 30V14a6 6 0 0 1 6-6h16"/><path d="M70 8h16a6 6 0 0 1 6 6v16"/>
+      <path d="M92 70v16a6 6 0 0 1-6 6H70"/><path d="M30 92H14a6 6 0 0 1-6-6V70"/>
+      <circle cx="50" cy="50" r="30" stroke-dasharray="10 7" opacity=".75"/>
+      <path d="M26 50h10M64 50h10M50 26v10M50 64v10"/>
+      <circle cx="50" cy="50" r="14"/><circle cx="50" cy="50" r="4.5"/>
+    </svg></div>
+    <div class="eyebrow">Primary operation</div>
+    <h2>Inspection Dashboard</h2>
+    <p>Pick the product and recipe running on the conveyor, then start reading and verifying codes.</p>
+    <div class="start">Select product
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </div>
+  </div>
+
+  <div class="tile" tabindex="0" data-screen="Teach Mode" style="animation-delay:.05s">
+    <span class="badge">Setup</span>
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <path d="M50 12a24 24 0 0 0-14 43.5V66h28V55.5A24 24 0 0 0 50 12Z"/>
+      <path d="M40 76h20"/><path d="M43 86h14"/>
+    </svg></div>
+    <h2>Teach Mode</h2>
+    <p>Learn a golden sample and set the expected code format.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-screen="Calibration" style="animation-delay:.1s">
+    <span class="badge">Setup</span>
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="13"/>
+      <path d="M50 8v16M50 76v16M8 50h16M76 50h16"/>
+    </svg></div>
+    <h2>Calibration</h2>
+    <p>Camera focus, scale and exposure against the target.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-go="products.html" style="animation-delay:.15s">
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <path d="M50 14 14 32l36 18 36-18-36-18Z"/><path d="M14 50l36 18 36-18"/>
+      <path d="M14 68l36 18 36-18"/>
+    </svg></div>
+    <h2>Job Library</h2>
+    <p>Products, recipes, code formats and tolerances.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-go="reports.html" style="animation-delay:.2s">
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <path d="M14 86h72"/><path d="M28 86V52"/><path d="M47 86V26"/>
+      <path d="M66 86V62"/><path d="M84 86V40"/>
+    </svg></div>
+    <h2>Reports</h2>
+    <p>Yield, reject history and the fail gallery.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-screen="Diagnostics" style="animation-delay:.25s">
+    <span class="badge">Service</span>
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <rect x="12" y="26" width="76" height="52" rx="8"/>
+      <circle cx="50" cy="52" r="15"/><path d="M36 26l6-10h16l6 10"/>
+    </svg></div>
+    <h2>Diagnostics</h2>
+    <p>Live camera view, lighting check and test capture.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-screen="Network" style="animation-delay:.3s">
+    <span class="badge">System</span>
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <path d="M16 46a48 48 0 0 1 68 0"/><path d="M29 59a30 30 0 0 1 42 0"/>
+      <path d="M41 71a13 13 0 0 1 18 0"/><circle cx="50" cy="82" r="3.5"/>
+    </svg></div>
+    <h2>Network</h2>
+    <p>Wi-Fi, LAN and the remote dashboard link.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-go="settings.html" style="animation-delay:.35s">
+    <span class="badge">System</span>
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="14"/>
+      <path d="M50 10v10M50 80v10M10 50h10M80 50h10M22 22l7 7M71 71l7 7M78 22l-7 7M29 71l-7 7"/>
+      <circle cx="50" cy="50" r="30"/>
+    </svg></div>
+    <h2>Settings</h2>
+    <p>Station name, units, operators and time.</p>
+  </div>
+
+  <div class="tile" tabindex="0" data-power style="animation-delay:.4s">
+    <span class="badge">System</span>
+    <div class="gl"><svg viewBox="0 0 100 100">
+      <path d="M50 14v34"/><path d="M28 28a30 30 0 1 0 44 0"/>
+    </svg></div>
+    <h2>Power</h2>
+    <p>Standby, restart or shut the machine down.</p>
+  </div>
+
+</div>
+
+<div class="botbar">
+  <span class="st warn"><span class="d"></span>Camera idle</span>
+  <span class="st off"><span class="d"></span>Dashboard offline</span>
+  <span class="unit" id="unit">&mdash;</span>
+  <span class="spacer"></span>
+  <span class="by">ProInspect Systems &middot; <span id="ver">v0.1.0</span></span>
+</div>
+
+<div class="sheet" id="sheet">
+  <div class="box">
+    <h3 id="sheetTitle">Screen</h3>
+    <p>This screen is not built yet.</p>
+    <div class="k">Touch anywhere to go back</div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+(function(){
+  'use strict';
+  // Tiles that lead somewhere navigate; the rest say they are unbuilt rather
+  // than doing nothing when touched.
+  document.querySelectorAll('[data-go]').forEach(function(el){
+    function go(){ location.href = el.dataset.go; }
+    el.addEventListener('click', go);
+    el.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+    });
+  });
+  var sheet = document.getElementById('sheet');
+  document.querySelectorAll('[data-screen]').forEach(function(el){
+    function show(){
+      document.getElementById('sheetTitle').textContent = el.dataset.screen;
+      sheet.classList.add('on');
+    }
+    el.addEventListener('click', show);
+    el.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(); }
+    });
+  });
+  sheet.addEventListener('click', function(){ sheet.classList.remove('on'); });
+})();
+</script>
+</body>
+</html>

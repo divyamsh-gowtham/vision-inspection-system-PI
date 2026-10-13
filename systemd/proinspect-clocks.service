@@ -1,0 +1,18 @@
+[Unit]
+Description=Pin Jetson power mode and clocks for HMI responsiveness
+# The stock 25W mode caps cores at 1.344 GHz and schedutil leaves them parked
+# near 729 MHz, because the HMI's load spreads across cores and never trips a
+# single-core ramp threshold. WebKit has no GPU acceleration on this board, so
+# UI rendering is CPU-bound and that parked clock is felt directly as pointer
+# lag. MAXN_SUPER plus pinned clocks measured ~2.4x the core frequency.
+After=nvpmodel.service
+Before=proinspect.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/nvpmodel -m 2
+ExecStart=/usr/bin/jetson_clocks
+
+[Install]
+WantedBy=multi-user.target

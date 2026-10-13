@@ -1,0 +1,10 @@
+{
+ "active": true,
+ "product": "PRD-1003",
+ "recipe": "RCP-1301",
+ "expected": "MRP \u20b9180/-\nUSP \u20b91.20/g\nPkd. 26/JUL/26\nExp. 26/JUL/27, CL2\nBN. KIF2071",
+ "rotate": 0,
+ "started_at": 1791519591.6237977,
+ "count": 8,
+ "last_count_at": 1791520901.9135733
+}

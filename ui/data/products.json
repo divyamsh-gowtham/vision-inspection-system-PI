@@ -1,0 +1,230 @@
+{
+ "_note": "Product and recipe catalogue for the display.",
+ "products": [
+  {
+   "id": "PRD-1001",
+   "name": "Everest Meat Masala",
+   "pack": "100 g carton",
+   "sku": "EVT-MM-100",
+   "image": "products/everest-meat-masala.jpg",
+   "substrate": "Printed carton, matte",
+   "code_location": "Bottom flap",
+   "recipes": [
+    {
+     "id": "RCP-1101",
+     "name": "MFD + best before, two line",
+     "printer": "CIJ dot-matrix",
+     "lines": 2,
+     "sample": "MFD 09/26\nBB  09/28",
+     "pattern": "^(MFD|BB) {1,2}\\d{2}/\\d{2}$",
+     "char_height_mm": 2.4,
+     "exposure_us": 180,
+     "gain_db": 4.0,
+     "min_ocv_score": 0.84,
+     "last_run": "2026-09-22",
+     "default": true
+    },
+    {
+     "id": "RCP-1102",
+     "name": "Batch code only",
+     "printer": "CIJ dot-matrix",
+     "lines": 1,
+     "sample": "B.NO E2417",
+     "pattern": "^B\\.NO [A-Z]\\d{4}$",
+     "char_height_mm": 2.4,
+     "exposure_us": 180,
+     "gain_db": 4.0,
+     "min_ocv_score": 0.82,
+     "last_run": "2026-09-11",
+     "default": false
+    }
+   ]
+  },
+  {
+   "id": "PRD-1002",
+   "name": "Nestle EVERYDAY",
+   "pack": "200 g pouch",
+   "sku": "NES-ED-200",
+   "image": "products/nestle-everyday.jpg",
+   "substrate": "Metallised poly pouch, glossy",
+   "code_location": "Back panel, white patch",
+   "recipes": [
+    {
+     "id": "RCP-1201",
+     "name": "Batch A - running",
+     "printer": "Thermal inkjet",
+     "lines": 3,
+     "sample": "Rs.129 (Rs.0.65 per g)\n621804515A 10:02 A\nAUG/26 - JUL/27",
+     "char_height_mm": 2.2,
+     "min_ocv_score": 0.85,
+     "note": "The batch currently on the line",
+     "default": true
+    },
+    {
+     "id": "RCP-1202",
+     "name": "Batch B - alternate",
+     "printer": "Thermal inkjet",
+     "lines": 3,
+     "sample": "Rs.125 (Rs.0.65 per g)\n623304515A 10:20 B\nAUG/26 - JUL/27",
+     "char_height_mm": 2.2,
+     "min_ocv_score": 0.85,
+     "note": "A different batch - must be rejected while Batch A is running",
+     "default": false
+    }
+   ]
+  },
+  {
+   "id": "PRD-1003",
+   "name": "Amul Dark Chocolate cartons",
+   "pack": "150 g / 125 g carton",
+   "sku": "AMU-SF-150",
+   "image": "products/amul-sugar-free.jpg",
+   "substrate": "Printed carton, black matte, yellow dot-matrix code",
+   "code_location": "Back, right end of the carton",
+   "recipes": [
+    {
+     "id": "RCP-1301",
+     "name": "Sugar Free 150 g · KIF2071",
+     "printer": "CIJ dot-matrix",
+     "lines": 5,
+     "sample": "MRP ₹180/-\nUSP ₹1.20/g\nPkd. 26/JUL/26\nExp. 26/JUL/27, CL2\nBN. KIF2071",
+     "default": true,
+     "note": "Amul Sugar Free Dark Chocolate 150 g",
+     "keywords": [
+      "DARK",
+      "SUGAR FREE",
+      "SUGARFREE",
+      "150 g",
+      "150g",
+      "55%",
+      "KIF2071",
+      "180/-",
+      "1.20/g",
+      "26/JUL",
+      "POLYOLS"
+     ]
+    },
+    {
+     "id": "RCP-1302",
+     "name": "Twilight Tryst 125 g · KIF1971",
+     "printer": "CIJ dot-matrix",
+     "lines": 5,
+     "sample": "MRP ₹200/-\nUSP ₹1.60/g\nPkd. 16/JUL/26\nExp. 16/JUL/27, AL2\nBN. KIF1971",
+     "default": false,
+     "note": "Amul India Twilight Tryst single origin 125 g",
+     "keywords": [
+      "INDIA",
+      "TWILIGHT",
+      "TRYST",
+      "SINGLE ORIGIN",
+      "125 g",
+      "125g",
+      "KIF1971",
+      "200/-",
+      "1.60/g",
+      "16/JUL",
+      "TASTE PROFILE",
+      "KARNATAKA"
+     ]
+    }
+   ],
+   "ocr_gain": 5.0,
+   "camera": {
+    "exposure_time_absolute": 60
+   }
+  },
+  {
+   "id": "PRD-1004",
+   "name": "Everest Pav Bhaji Masala",
+   "pack": "50 g carton",
+   "sku": "EVT-PBM-50",
+   "image": "products/everest-pav-bhaji.jpg",
+   "substrate": "Printed carton, matte",
+   "code_location": "End flap, cream strip (carton stood on end)",
+   "recipes": [
+    {
+     "id": "RCP-1401",
+     "name": "Batch E29D776361 - running",
+     "printer": "CIJ dot-matrix",
+     "lines": 1,
+     "sample": "AUG26 OCT27 E29D776361 ₹53.00 ₹1.06/g",
+     "default": true,
+     "keywords": [
+      "E29D776361",
+      "AUG26",
+      "OCT27",
+      "53.00",
+      "1.06/g",
+      "50g"
+     ],
+     "note": "Packed AUG26, use by OCT27"
+    },
+    {
+     "id": "RCP-1402",
+     "name": "Batch E17D770743 - alternate",
+     "printer": "CIJ dot-matrix",
+     "lines": 1,
+     "sample": "AUG26 OCT27 E17D770743 ₹53.00 ₹1.06/g",
+     "default": false,
+     "keywords": [
+      "E17D770743",
+      "AUG26",
+      "OCT27",
+      "53.00",
+      "1.06/g",
+      "50g"
+     ],
+     "note": "Same dates and price; only the batch number differs"
+    }
+   ],
+   "camera": {
+    "exposure_time_absolute": 20
+   },
+   "ocr_gain": 2.5
+  },
+  {
+   "id": "PRD-1005",
+   "name": "Cipla Nicogum 4 mg freshmint",
+   "pack": "8-pocket blister strip (blue)",
+   "sku": "CIP-NG4-10",
+   "image": "products/nicotex-gum.jpg",
+   "substrate": "Blister: white gum under clear plastic, foil back",
+   "code_location": "n/a - piece count",
+   "recipes": [
+    {
+     "id": "RCP-1501",
+     "name": "8 pieces - full strip",
+     "printer": "-",
+     "lines": 0,
+     "sample": "",
+     "count": {
+      "expected": 8
+     },
+     "default": true,
+     "note": "Count the gums; every pocket filled = PASS"
+    }
+   ]
+  },
+  {
+   "id": "PRD-1006",
+   "name": "Bisleri bottle",
+   "pack": "PET water bottle",
+   "sku": "BIS-WB",
+   "image": "products/bisleri-bottle.jpg",
+   "substrate": "Clear PET, curved - laser / CIJ code",
+   "code_location": "Neck or shoulder of the bottle",
+   "camera_id": "OPENAICAM",
+   "recipes": [
+    {
+     "id": "RCP-1601",
+     "name": "Batch - running",
+     "printer": "Laser / CIJ",
+     "lines": 2,
+     "sample": "(teach to learn)",
+     "default": true,
+     "note": "Read with the OPENAICAM (high-res). Pass a bottle to learn the code."
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,19 @@
+[Unit]
+Description=ProInspect counter service (belt camera, product count, MJPEG)
+After=proinspect-clocks.service
+Before=proinspect.service
+
+[Service]
+Type=simple
+User=jark
+Group=jark
+WorkingDirectory=/home/jark/proinspect
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /home/jark/proinspect/counter_service.py
+Restart=always
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

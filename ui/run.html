@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ProInspect &middot; Running</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .work{
+    position:relative;z-index:1;flex:1;min-height:0;
+    display:grid;grid-template-columns:1fr 372px;gap:16px;padding:16px 24px;
+  }
+  .panel{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+    box-shadow:var(--sh-1);display:flex;flex-direction:column;min-height:0;overflow:hidden;
+  }
+  .panel > h2{
+    flex:0 0 auto;padding:13px 18px;border-bottom:1px solid var(--line-soft);
+    font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.17em;
+    text-transform:uppercase;color:var(--ink-dim);display:flex;align-items:center;gap:12px;
+  }
+  .panel > h2 .sp{flex:1}
+  .pill{
+    font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.13em;
+    text-transform:uppercase;padding:4px 8px;border-radius:6px;white-space:nowrap;
+    background:var(--ground);color:var(--ink-dim);border:1px solid var(--line-soft);
+  }
+  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .pill.bad{background:var(--fail-soft);color:var(--fail);border-color:transparent}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+
+  /* ---------- live view ---------- */
+  .stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;
+         background:#0F1E29;position:relative}
+  .feed{position:relative;max-width:100%;max-height:100%;aspect-ratio:16/9;
+        width:100%;height:100%;object-fit:contain;display:flex;align-items:center;justify-content:center}
+  .feed img{width:100%;height:100%;object-fit:contain;display:block;background:#0F1E29}
+  /* Overlays are positioned inside a box that matches the image's painted
+     area, not the element, so the gate lands on the right pixels. */
+  .ov{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+  .gate{
+    position:absolute;border:2px dashed rgba(255,255,255,.55);border-radius:6px;
+    box-shadow:0 0 0 1px rgba(0,0,0,.35);
+  }
+  .gate .tag{
+    position:absolute;left:-2px;top:-24px;font-family:var(--mono);font-size:10px;
+    font-weight:600;letter-spacing:.12em;color:#fff;background:rgba(13,25,34,.75);
+    padding:4px 8px;border-radius:4px;white-space:nowrap;
+  }
+  .gate.on{border:3px solid var(--ok);box-shadow:0 0 0 2px rgba(0,0,0,.4)}
+  .gate.on .tag{background:var(--ok)}
+  .gate.learn{border-color:var(--warn)}
+  .track{position:absolute;border:2px solid #F0C040;border-radius:4px;display:none}
+  .track.on{display:block}
+  .codewin{position:absolute;border:2px solid var(--live);border-radius:4px;display:none;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+  .codewin.on{display:block}
+  .codewin .tag{position:absolute;left:-2px;bottom:-22px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.12em;color:#fff;background:var(--live);padding:3px 7px;border-radius:4px;white-space:nowrap}
+  .btn.sm.arm{background:var(--live);border-color:var(--live);color:#fff}
+  .nosvc{
+    position:absolute;inset:0;display:none;place-items:center;text-align:center;
+    color:#CFE6F2;font-size:14px;padding:30px;background:#0F1E29;
+  }
+  .nosvc.on{display:grid}
+  .nosvc b{display:block;font-size:20px;font-weight:600;margin-bottom:8px}
+  .nosvc code{font-family:var(--mono);font-size:12px;color:#8FB6CC}
+
+  .meter{flex:0 0 auto;padding:12px 18px;border-top:1px solid var(--line-soft);display:grid;
+         grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+  .meter .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-dim)}
+  .bar{height:10px;border-radius:5px;background:var(--ground);border:1px solid var(--line-soft);position:relative;overflow:hidden}
+  .bar i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--live);border-radius:5px}
+  .bar.on i{background:var(--ok)}
+  .bar b{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--fail);opacity:.7}
+  .meter .v{font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink-2);min-width:64px;text-align:right}
+
+  .tools{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:12px 18px;border-top:1px solid var(--line-soft)}
+  .tools .hint{flex:1;font-size:12px;color:var(--ink-dim)}
+  .btn.sm{padding:12px 18px;font-size:14px;border-radius:10px}
+
+  /* ---------- the number ---------- */
+  .count{padding:8px 14px 6px;text-align:center;border-bottom:1px solid var(--line-soft)}
+  .count .l{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-dim)}
+  .count .n{
+    font-family:var(--mono);font-size:62px;font-weight:600;line-height:1;
+    letter-spacing:-2px;font-variant-numeric:tabular-nums;color:var(--brand);margin-top:4px;
+  }
+  /* One-shot flash on each product. There is no GPU here, so this is the only
+     animation on the page and it runs a quarter of a second, once per pack. */
+  .count .n.bump{animation:bump .28s cubic-bezier(.2,.9,.3,1)}
+  @keyframes bump{0%{color:var(--ok);transform:scale(1.07)}100%{color:var(--brand);transform:none}}
+  .count .s{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);margin-top:6px;
+            font-variant-numeric:tabular-nums;letter-spacing:.04em}
+  .count .s b{color:var(--ink-2);font-weight:600}
+
+  /* ---------- the read ---------- */
+  .ocr{padding:8px 14px;border-bottom:1px solid var(--line-soft);min-height:0}
+  .ocr .lab{
+    display:flex;align-items:center;gap:8px;margin-bottom:6px;white-space:nowrap;
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--ink-dim);
+  }
+  .ocr .lab .sp{flex:1}
+  .ocr .pill.big{font-size:9.5px;padding:4px 8px;overflow:hidden;text-overflow:ellipsis;max-width:70%}
+  .ocr .thumb{
+    display:block;width:100%;height:56px;object-fit:contain;background:#0F1E29;
+    border-radius:8px;border:1px solid var(--line);
+  }
+  .ocr .thumb.none{display:none}
+  /* The code as read, laid out like the printer lays it down. */
+  .ocr .read{
+    margin-top:6px;padding:7px 10px;border-radius:8px;min-height:0;
+    background:#0F1E29;color:#CFE6F2;font-family:var(--mono);font-size:12px;line-height:1.35;
+    white-space:pre-wrap;word-break:break-all;letter-spacing:.05em;
+  }
+  .ocr .read.ok{background:#0E2A1C;color:#BFEBD3}
+  .ocr .read.bad{background:#2E1512;color:#F5C9C4}
+  .ocr .read.wait{color:#6F8698}
+  /* Whole-screen verdict: the ground and every card go green or red. */
+  body.pass{background:#1F8A5A}
+  body.fail{background:#B7382C}
+  body.pass .panel,body.fail .panel{border-color:transparent}
+  body.pass .panel{background:#E3F1EA}
+  body.fail .panel{background:#FBEBE9}
+  body.pass .stage,body.fail .stage{background:#0F1E29}
+  .verdict{display:none;padding:8px 14px;text-align:center;font-family:var(--mono);font-size:32px;font-weight:600;letter-spacing:.08em;color:#fff;border-bottom:1px solid rgba(0,0,0,.08);line-height:1.1}
+  body.pass .verdict{display:block;background:#137A4E}
+  body.fail .verdict{display:block;background:#AE2A1F}
+  .verdict small{display:block;font-size:10px;letter-spacing:.12em;margin-top:3px;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ocr .exp{
+    margin-top:6px;display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:baseline;
+    font-family:var(--mono);font-size:9.5px;color:var(--ink-dim);white-space:pre-wrap;
+  }
+  /* once a verdict names the batch, the expected sample is that same text */
+  body.pass .ocr .exp,body.fail .ocr .exp{display:none}
+  .ocr .exp dt{font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+  .ocr .exp dd{color:var(--ink-2)}
+  .ocr .meta{
+    margin-top:5px;font-family:var(--mono);font-size:9px;color:var(--ink-dim);
+    letter-spacing:.04em;display:flex;gap:12px;flex-wrap:wrap;font-variant-numeric:tabular-nums;
+  }
+  .rlog{flex:1;min-height:0;max-height:110px;overflow-y:auto;padding:4px 14px;border-bottom:1px solid var(--line-soft)}
+  .rlog .row{
+    display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;
+    padding:6px 0;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:11px;
+  }
+  .rlog .row:last-child{border-bottom:0}
+  .rlog .n{color:var(--ink-dim)}
+  .rlog .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+  .rlog .v{font-size:9px;font-weight:600;letter-spacing:.12em;padding:3px 7px;border-radius:5px;background:var(--ground);color:var(--ink-dim)}
+  .rlog .v.ok{background:var(--ok-soft);color:var(--ok)}
+  .rlog .v.bad{background:var(--fail-soft);color:var(--fail)}
+  .rlog .empty{font-size:11.5px;color:var(--ink-dim);padding:8px 0}
+
+  .job{padding:6px 14px;border-bottom:1px solid var(--line-soft);display:grid;
+       grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline}
+  .job .nm{font-size:14px;font-weight:600;letter-spacing:-.2px;line-height:1.2}
+  .job .rc{font-size:11.5px;color:var(--ink-dim)}
+  .job .kv{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);text-align:right;
+           font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .acts{padding:8px 14px;display:flex;gap:8px;margin-top:auto}
+  .acts .btn{flex:1;text-align:center;margin:0;padding:12px 8px;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="backbtn" id="back" href="recipes.html">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Change job
+  </a>
+  <div class="rule"></div>
+  <div class="station">
+    <div class="t">Inspection Dashboard</div>
+    <div class="s" id="subhead">Running &middot; counting products</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="brand">
+    <img class="logo" id="logo" src="logo-icon.png" alt="">
+    <div class="wm">Pro<span>Inspect</span></div>
+  </div>
+  <div class="rule"></div>
+  <div class="clock"><div class="hm" id="hm">--:--</div><div class="dt" id="dt">&mdash;</div></div>
+  <div class="iconbtn pwr" data-power tabindex="0" role="button" aria-label="Power">
+    <svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+  </div>
+</div>
+
+<div class="work">
+  <div class="panel">
+    <h2>Live view <span class="sp"></span>
+      <span class="pill" id="camPill">connecting</span>
+      <span class="pill" id="beltPill">belt</span>
+    </h2>
+    <div class="stage">
+      <div class="feed" id="feed">
+        <img id="cam" alt="Live view">
+        <div class="ov" id="ov">
+          <div class="track" id="track"></div>
+          <div class="codewin" id="codewin"><span class="tag">CODE</span></div>
+          <div class="gate" id="gate"><span class="tag" id="gateTag">GATE</span></div>
+        </div>
+        <div class="nosvc" id="nosvc"><div>
+          <b>Counter service not running</b>
+          Start it on the machine:<br><code>systemctl start proinspect-counter</code>
+        </div></div>
+      </div>
+    </div>
+    <div class="meter">
+      <span class="l">Presence</span>
+      <div class="bar" id="bar"><i id="barFill"></i><b id="barMark"></b></div>
+      <span class="v" id="barVal">&mdash;</span>
+    </div>
+    <div class="tools">
+      <span class="hint">Tap the picture to move the gate. A product is counted the moment it enters the gate. To focus, hold a pack still under the camera and press Focus once.</span>
+      <button class="btn sm" id="btnSmaller" title="Smaller gate">&minus;</button>
+      <button class="btn sm" id="btnLarger" title="Larger gate">+</button>
+      <button class="btn sm" id="btnCode" title="Then tap the batch code on a pack held under the camera">Set code area</button>
+      <button class="btn sm" id="btnLearn">Learn belt</button>
+      <button class="btn sm" id="btnFocus">Focus</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="verdict" id="verdict">&mdash;<small id="verdictSub"></small></div>
+    <div class="count">
+      <div class="l">Products passed</div>
+      <div class="n" id="count">0</div>
+      <div class="s" id="countSub">&nbsp;</div>
+    </div>
+    <div class="ocr">
+      <div class="lab"><span>Batch code &middot; OCR</span><span class="sp"></span><span class="pill big" id="ocrPill">waiting</span></div>
+      <img class="thumb none" id="ocrThumb" alt="">
+      <div class="read wait" id="ocrText">Pass a product to read its code</div>
+      <div class="exp"><dt>Expected</dt><dd id="ocrExp">&mdash;</dd></div>
+      <div class="meta" id="ocrMeta"></div>
+    </div>
+    <div class="rlog" id="ocrLog"><div class="empty">Each pack's read appears here.</div></div>
+    <div class="job">
+      <div class="nm" id="jobName">&mdash;</div>
+      <div class="kv" id="elapsed">&mdash;</div>
+      <div class="rc" id="jobRec">&mdash;</div>
+      <div class="kv" id="rate">&mdash;</div>
+    </div>
+    <div class="acts">
+      <button class="btn" id="btnReset">Reset count</button>
+      <button class="btn danger" id="btnStop">Stop run</button>
+    </div>
+  </div>
+</div>
+
+<div class="botbar">
+  <span class="st off" id="stCam"><span class="d"></span>Camera</span>
+  <span class="st off" id="stSvc"><span class="d"></span>Counter service</span>
+  <span class="unit" id="unit">&mdash;</span>
+  <span class="spacer"></span>
+  <span class="by">ProInspect Systems &middot; <span id="ver">v0.1.0</span></span>
+</div>
+
+<script src="app.js"></script>
+<script>
+(function(){
+  'use strict';
+  var SVC = 'http://127.0.0.1:8080';
+  var POLL_MS = 200;                 // fast enough to feel live; every DOM write is a repaint
+
+  function $(i){ return document.getElementById(i); }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
+    });
+  }
+  function param(n){
+    var m = new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  function j(u){ return fetch(u, {cache:'no-store'}).then(function(r){ return r.json(); }); }
+  function setText(el, v){ if (el.textContent !== v) el.textContent = v; }
+  function setHTML(el, v){ if (el.__html !== v) { el.__html = v; el.innerHTML = v; } }
+  function setClass(el, v){ if (el.className !== v) el.className = v; }
+  function fmtDur(s){
+    s = Math.max(0, Math.round(s));
+    var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), x = s%60;
+    return (h ? h+'h ' : '') + (h || m ? m+'m ' : '') + x + 's';
+  }
+
+  var PID = param('product') || '', RID = param('recipe') || '';
+  $('back').href = 'recipes.html' + (PID ? '?product=' + encodeURIComponent(PID) : '');
+
+  // ---- what we are running, for the job card -------------------------------
+  fetch('data/products.json', {cache:'no-store'}).then(function(r){ return r.json(); })
+    .then(function(d){
+      var prod = (d.products || []).filter(function(p){ return p.id === PID; })[0];
+      var rcp = prod ? prod.recipes.filter(function(r){ return r.id === RID; })[0] : null;
+      $('jobName').textContent = prod ? prod.name : (PID || 'No product');
+      $('jobRec').textContent  = (rcp ? rcp.name : (RID || 'No recipe')) + (RID ? '  ·  ' + RID : '');
+    }).catch(function(){});
+
+  // ---- start (idempotent for the same job, so a reload keeps the count) ----
+  var cam = $('cam');
+  var svcUp = false;
+  function setSvc(up, why){
+    // A service restart drops the MJPEG connection without an <img> error
+    // event, so the picture would freeze; reconnect whenever it comes back.
+    if (up && !svcUp && cam) connectFeed();
+    svcUp = up;
+    $('stSvc').className = 'st ' + (up ? 'ok' : 'off');
+    $('nosvc').className = 'nosvc' + (up ? '' : ' on');
+    if (!up) { $('camPill').textContent = why || 'no service'; $('camPill').className = 'pill bad'; }
+  }
+  j(SVC + '/run/start?product=' + encodeURIComponent(PID) + '&recipe=' + encodeURIComponent(RID))
+    .then(function(){ setSvc(true); })
+    .catch(function(){ setSvc(false, 'no service'); });
+
+  // ---- live feed -------------------------------------------------------------
+  // One MJPEG connection; if it drops (service restart), reconnect after a second.
+  var feedRetry = null;
+  function connectFeed(){
+    cam.src = SVC + '/stream.mjpg?t=' + Date.now();
+  }
+  cam.addEventListener('error', function(){
+    clearTimeout(feedRetry); feedRetry = setTimeout(connectFeed, 1000);
+  });
+  // The first connection is made by setSvc(true) once the service answers.
+
+  // The <img> is object-fit:contain, so the painted picture can be letterboxed
+  // inside the element. Overlays are placed over the painted area only.
+  function fitOverlay(){
+    var W = cam.clientWidth, H = cam.clientHeight, ov = $('ov');
+    if (!W || !H) return;
+    var iw = cam.naturalWidth || 16, ih = cam.naturalHeight || 9;
+    var s = Math.min(W / iw, H / ih), pw = iw * s, ph = ih * s;
+    ov.style.left = ((W - pw) / 2) + 'px'; ov.style.top = ((H - ph) / 2) + 'px';
+    ov.style.width = pw + 'px'; ov.style.height = ph + 'px';
+  }
+  cam.addEventListener('load', fitOverlay);
+  window.addEventListener('resize', fitOverlay);
+
+  // Tap to place the gate by its centre. Coordinates are normalised against the
+  // painted picture, which is what the service's gate is normalised against.
+  // Set code area: freeze the picture on the last pack that went through and
+  // let the operator tap the code on it. No need to hold a pack in view.
+  var armCode = false;
+  function armCodeMode(on){
+    armCode = on;
+    setClass($('btnCode'), 'btn sm' + (on ? ' arm' : ''));
+    setText($('btnCode'), on ? 'Tap the code on the pack…' : 'Set code area');
+    if (on) { cam.src = SVC + '/ocr/pack.jpg?t=' + Date.now(); }
+    else { connectFeed(); }
+  }
+  $('btnCode').addEventListener('click', function(){
+    if (!svcUp) return;
+    armCodeMode(!armCode);
+  });
+  $('feed').addEventListener('click', function(e){
+    if (!svcUp) return;
+    var ov = $('ov'), r = ov.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    var cx = (e.clientX - r.left) / r.width, cy = (e.clientY - r.top) / r.height;
+    if (cx < 0 || cx > 1 || cy < 0 || cy > 1) return;
+    if (armCode) {
+      armCodeMode(false);
+      j(SVC + '/code/set?from=last&fx=' + cx.toFixed(4) + '&fy=' + cy.toFixed(4)).then(function(r){
+        if (r && r.ok === false) { setText($('btnCode'), r.error || 'could not set'); setTimeout(function(){ setText($('btnCode'), 'Set code area'); }, 4000); }
+      }).catch(function(){});
+      return;
+    }
+    j(SVC + '/gate/set?cx=' + cx.toFixed(4) + '&cy=' + cy.toFixed(4)).catch(function(){});
+  });
+  function resize(k){
+    if (!svcUp || !lastGate) return;
+    var w = Math.min(1, Math.max(0.08, lastGate.w * k)), h = Math.min(1, Math.max(0.08, lastGate.h * k));
+    var cx = lastGate.x + lastGate.w / 2, cy = lastGate.y + lastGate.h / 2;
+    j(SVC + '/gate/set?w=' + w.toFixed(4) + '&h=' + h.toFixed(4) + '&cx=' + cx.toFixed(4) + '&cy=' + cy.toFixed(4)).catch(function(){});
+  }
+  $('btnSmaller').addEventListener('click', function(){ resize(0.85); });
+  $('btnLarger').addEventListener('click', function(){ resize(1.18); });
+  $('btnLearn').addEventListener('click', function(){
+    if (!svcUp) return;
+    j(SVC + '/belt/learn').catch(function(){});
+  });
+  $('btnFocus').addEventListener('click', function(){
+    if (!svcUp) return;
+    j(SVC + '/camera/focus').catch(function(){});
+  });
+
+  // ---- status poll -----------------------------------------------------------
+  var lastCount = null, lastGate = null, gateKey = '', trackKey = '', lastBar = -1, misses = 0;
+  function apply(s){
+    var run = s.run || {}, c = s.counter || {}, camS = s.camera || {}, g = s.gate || {};
+
+    // The number. Flash once per increment; never animate otherwise.
+    var n = run.count || 0, el = $('count');
+    if (lastCount === null) { el.textContent = n; }
+    else if (n !== lastCount) {
+      el.textContent = n;
+      el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+    }
+    lastCount = n;
+    var sub = '';
+    if (run.active) {
+      sub = '<b>' + (run.per_min || 0) + '</b> / min';
+      if (run.since_last != null) sub += '  ·  last <b>' + fmtDur(run.since_last) + '</b> ago';
+    } else {
+      sub = 'Run stopped';
+    }
+    setHTML($('countSub'), sub);
+    setText($('elapsed'), run.active ? 'running ' + fmtDur(run.elapsed || 0) : 'stopped');
+    setText($('rate'), run.active ? (run.per_min || 0) + ' / min' : '—');
+    renderOcr(s.ocr || {}, s.ocr_log || [], run);
+
+    // Camera + belt state.
+    var online = !!camS.online;
+    if (camS.focusing) {
+      setText($('camPill'), 'focusing ' + Math.round((camS.focus_progress || 0) * 100) + '%');
+      setClass($('camPill'), 'pill warn');
+    } else {
+      setText($('camPill'), online ? 'live · ' + (camS.fps || 0).toFixed(0) + ' fps' + (camS.focus != null ? ' · focus ' + camS.focus : '') : (camS.error || 'no signal'));
+      setClass($('camPill'), 'pill ' + (online ? 'ok' : 'bad'));
+    }
+    if ($('btnFocus').disabled !== !!camS.focusing) $('btnFocus').disabled = !!camS.focusing;
+    setClass($('stCam'), 'st ' + (online ? 'ok' : 'warn'));
+    if (c.learning) {
+      setText($('beltPill'), 'learning belt ' + Math.round((c.learn_progress || 0) * 100) + '%');
+      setClass($('beltPill'), 'pill warn');
+    } else if (c.has_reference) {
+      setText($('beltPill'), 'belt learned'); setClass($('beltPill'), 'pill ok');
+    } else {
+      setText($('beltPill'), 'no belt reference'); setClass($('beltPill'), 'pill bad');
+    }
+
+    // Gate box: dashed when empty, solid green while a product is in it.
+    lastGate = g;
+    var gk = [g.x, g.y, g.w, g.h].join(',');
+    if (gk !== gateKey) {
+      gateKey = gk; var ge = $('gate');
+      ge.style.left = (g.x * 100) + '%'; ge.style.top = (g.y * 100) + '%';
+      ge.style.width = (g.w * 100) + '%'; ge.style.height = (g.h * 100) + '%';
+    }
+    setClass($('gate'), 'gate' + (c.in_gate ? ' on' : '') + (c.learning ? ' learn' : ''));
+    setText($('gateTag'), c.learning ? 'KEEP BELT CLEAR' : (c.in_gate ? 'PRODUCT' : (c.armed ? 'GATE' : 'CLEARING')));
+
+    // Track box follows the moving thing anywhere in the picture.
+    var t = c.track, cw = s.code_window, tk = (t ? [t.x, t.y, t.w, t.h].join(',') : '') + '|' + (cw ? [cw.x, cw.y, cw.w, cw.h].join(',') : '');
+    if (tk !== trackKey) {
+      trackKey = tk; var te = $('track'), ce = $('codewin');
+      if (t) {
+        te.style.left = (t.x * 100) + '%'; te.style.top = (t.y * 100) + '%';
+        te.style.width = (t.w * 100) + '%'; te.style.height = (t.h * 100) + '%';
+        te.className = 'track on';
+        if (cw) {
+          ce.style.left = ((t.x + cw.x * t.w) * 100) + '%'; ce.style.top = ((t.y + cw.y * t.h) * 100) + '%';
+          ce.style.width = (cw.w * t.w * 100) + '%'; ce.style.height = (cw.h * t.h * 100) + '%';
+          ce.className = 'codewin on';
+        } else { ce.className = 'codewin'; }
+      } else { te.className = 'track'; ce.className = 'codewin'; }
+    }
+
+    // Presence meter, with the enter threshold marked. Only repaint on change.
+    var p = c.presence || 0, enter = c.enter || 0.055, span = enter * 3;
+    var pct = Math.min(100, Math.round(p / span * 50) * 2);      // 2% steps: noise never repaints it
+    var bk = pct + ':' + (c.in_gate ? 1 : 0);
+    if (bk !== lastBar) {
+      lastBar = bk; $('barFill').style.width = pct + '%';
+      $('barMark').style.left = Math.min(100, (enter / span * 100)) + '%';
+      setClass($('bar'), 'bar' + (c.in_gate ? ' on' : ''));
+    }
+    setText($('barVal'), p.toFixed(2));
+  }
+
+  // ---- the read ------------------------------------------------------------
+  var ocrShownN = -1, ocrShownState = '', ocrLogKey = '', expShown = null;
+  function renderOcr(o, log, run){
+    var exp = run.expected || '';
+    if (exp !== expShown) { expShown = exp; $('ocrExp').textContent = exp || 'no sample in the recipe'; }
+    var key = (o.state || 'idle') + ':' + (o.n || 0) + ':' + (o.attempt || 0) + ':' + (o.code_score || 0) + ':' + (o.conf || 0);
+    if (key !== ocrShownState) {
+      ocrShownState = key;
+      var pill = $('ocrPill'), txt = $('ocrText'), th = $('ocrThumb'), meta = $('ocrMeta');
+      if (o.state === 'reading') {
+        pill.textContent = 'reading #' + o.n + '…'; pill.className = 'pill big warn';
+        if (o.n !== ocrShownN) { txt.textContent = 'Reading pack #' + o.n + '…'; txt.className = 'read wait'; meta.textContent = ''; }
+      } else if (o.state === 'done') {
+        var m = o.match || {}, has = !!(o.text && o.text.trim()), v = o.verdict || {};
+        if (v.state === 'pass') {
+          pill.textContent = 'pass · ' + v.batch; pill.className = 'pill big ok'; txt.className = 'read ok'; txt.textContent = v.text;
+          document.body.className = 'pass'; $('verdict').firstChild.nodeValue = 'PASS'; setText($('verdictSub'), v.batch + (v.evidence ? '  ·  ' + v.evidence : ''));
+        } else if (v.state === 'fail' && v.batch) {
+          pill.textContent = 'fail · wrong batch'; pill.className = 'pill big bad'; txt.className = 'read bad'; txt.textContent = v.text;
+          document.body.className = 'fail'; $('verdict').firstChild.nodeValue = 'FAIL'; setText($('verdictSub'), 'WRONG BATCH · ' + v.batch + (v.evidence ? '  ·  ' + v.evidence : ''));
+        } else if (v.state === 'fail') {
+          pill.textContent = 'fail · no code'; pill.className = 'pill big bad'; txt.className = 'read bad'; txt.textContent = has ? 'Unknown code:\n' + o.text : (o.error || 'No code found on the pack');
+          document.body.className = 'fail'; $('verdict').firstChild.nodeValue = 'FAIL'; setText($('verdictSub'), 'NO KNOWN BATCH CODE READ');
+        }
+        else if (!has) { pill.textContent = 'no read'; pill.className = 'pill big bad'; txt.className = 'read bad'; txt.textContent = o.error || 'No code found on the pack'; }
+        else if (m.checked && m.ok) { pill.textContent = 'match'; pill.className = 'pill big ok'; txt.className = 'read ok'; txt.textContent = o.text; }
+        else if (m.checked) { pill.textContent = 'mismatch' + (m.bad_fields && m.bad_fields.length ? ' · ' + m.bad_fields.join(', ') : ''); pill.className = 'pill big bad'; txt.className = 'read bad'; txt.textContent = o.text; }
+        else { pill.textContent = 'read'; pill.className = 'pill big ok'; txt.className = 'read'; txt.textContent = o.text; }
+        var bits = ['#' + o.n];
+        if (o.engine) bits.push(o.engine === 'gpu' ? 'GPU' : 'CPU');
+        if (o.conf != null) bits.push('conf ' + Math.round(o.conf));
+        if (o.ms != null) bits.push(o.ms + ' ms');
+        if (o.rotate) bits.push('rot ' + o.rotate + '°');
+        if (o.at) bits.push(o.at);
+        meta.textContent = bits.join('  ·  ');
+        if (o.n !== ocrShownN) {
+          ocrShownN = o.n;
+          th.className = 'thumb'; th.src = SVC + '/ocr/last.jpg?n=' + o.n + '&t=' + Date.now();
+        }
+      } else {
+        document.body.className = '';
+        pill.textContent = 'waiting'; pill.className = 'pill big';
+        txt.className = 'read wait'; txt.textContent = 'Pass a product to read its code';
+        meta.textContent = ''; th.className = 'thumb none'; ocrShownN = -1;
+      }
+    }
+    var lk = log.map(function(e){ return e.n + ':' + e.text + ':' + e.ok; }).join('|');
+    if (lk !== ocrLogKey) {
+      ocrLogKey = lk;
+      $('ocrLog').innerHTML = log.length ? log.slice().reverse().map(function(e){
+        var v = e.ok === true ? '<span class="v ok">OK</span>' : e.ok === false ? '<span class="v bad">NO</span>' : '<span class="v">READ</span>';
+        return '<div class="row"><span class="n">#' + e.n + '</span><span class="t">' + esc(e.text || '—') + '</span>' + v + '</div>';
+      }).join('') : '<div class="empty">Each pack\'s read appears here.</div>';
+    }
+  }
+
+  (function poll(){
+    j(SVC + '/status').then(function(s){
+      misses = 0;
+      if (!svcUp) setSvc(true);
+      apply(s);
+    }).catch(function(){
+      // Three misses in a row before declaring the service gone: one slow
+      // response must not flash the panel.
+      if (++misses >= 3 && svcUp) setSvc(false, 'no service');
+    }).then(function(){ setTimeout(poll, POLL_MS); });
+  })();
+
+  // ---- actions ---------------------------------------------------------------
+  $('btnReset').addEventListener('click', function(){
+    if (!svcUp) return;
+    j(SVC + '/run/reset').catch(function(){});   // the next poll shows the zero
+  });
+  $('btnStop').addEventListener('click', function(){
+    var back = 'recipes.html' + (PID ? '?product=' + encodeURIComponent(PID) : '');
+    this.disabled = true;
+    j(SVC + '/run/stop').catch(function(){}).then(function(){ location.href = back; });
+  });
+})();
+</script>
+</body>
+</html>

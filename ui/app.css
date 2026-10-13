@@ -1,0 +1,232 @@
+/* ProInspect HMI - shared shell.
+   IBM Plex is bundled under ui/fonts; the panel has no network at boot. */
+
+:root{
+  --ground:#E8EDF1;
+  --card:#FFFFFF;
+  --line:#D7E0E7;
+  --line-soft:#E9EFF3;
+  --ink:#0D1922;
+  --ink-2:#364A58;
+  --ink-dim:#6A7F8D;
+  /* Brand navy, sampled from the ProInspect Systems mark. */
+  --brand:#28465A;
+  --brand-lo:#3B6683;
+  --brand-hi:#132635;
+  --live:#3E88B0;                 /* lighter brand blue: anything alive */
+  --ok:#137A4E;
+  --ok-soft:#E3F1EA;
+  --warn:#8A5B05;
+  --warn-soft:#FAF0DA;
+  --fail:#AE2A1F;
+  --fail-soft:#FBEBE9;
+  --sans:'IBM Plex Sans','Liberation Sans',sans-serif;
+  --mono:'IBM Plex Mono','DejaVu Sans Mono',monospace;
+  --r:16px;
+  --sh-1:0 1px 2px rgba(13,25,34,.05);
+  --sh-2:0 2px 4px rgba(13,25,34,.05), 0 10px 26px rgba(13,25,34,.07);
+  --sh-3:0 3px 6px rgba(13,25,34,.07), 0 20px 46px rgba(13,25,34,.13);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--ground);color:var(--ink);
+  font-family:var(--sans);font-size:16px;
+  display:flex;flex-direction:column;
+  user-select:none;-webkit-user-select:none;
+  -webkit-font-smoothing:antialiased;
+}
+/* A whisper of texture stops the large flat ground reading as dead space. */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(circle at 1px 1px, rgba(40,70,90,.055) 1px, transparent 0);
+  background-size:22px 22px;
+}
+/* Pointer is hidden only when the host passes --hide-cursor (touchscreen). */
+html.nocursor, html.nocursor *{cursor:none!important}
+.tile,.opt,.iconbtn,.btn,.row-item{cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+
+/* ===================== top bar ===================== */
+.topbar{
+  position:relative;z-index:3;flex:0 0 auto;
+  display:flex;align-items:center;gap:16px;padding:12px 24px;
+  background:rgba(255,255,255,.88);
+  -webkit-backdrop-filter:saturate(1.6) blur(14px);
+  backdrop-filter:saturate(1.6) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand .logo{height:34px;width:auto;display:none}
+.brand .logo.ready{display:block}
+.wm{font-size:17px;font-weight:700;letter-spacing:-.4px;color:var(--brand)}
+.wm span{color:var(--live)}
+.rule{width:1px;height:30px;background:var(--line)}
+.station .t{font-size:15.5px;font-weight:600;letter-spacing:-.2px;line-height:1.2}
+.station .s{
+  font-family:var(--mono);font-size:9.5px;font-weight:500;letter-spacing:.19em;
+  text-transform:uppercase;color:var(--ink-dim);margin-top:4px;
+}
+.spacer{flex:1}
+.clock{text-align:right;line-height:1.1}
+.clock .hm{
+  font-family:var(--mono);font-size:23px;font-weight:600;
+  font-variant-numeric:tabular-nums;letter-spacing:-.5px;
+}
+.clock .dt{
+  font-family:var(--mono);font-size:10px;color:var(--ink-dim);
+  margin-top:3px;letter-spacing:.07em;
+}
+.iconbtn{
+  width:48px;height:48px;border-radius:12px;flex:0 0 auto;
+  border:1px solid var(--line);background:var(--card);
+  display:grid;place-items:center;color:var(--ink-2);
+  box-shadow:var(--sh-1);transition:.16s ease;
+}
+.iconbtn:hover{box-shadow:var(--sh-2);border-color:#BFCFDA}
+.iconbtn.pwr:hover{color:var(--fail);border-color:#E7C4C0}
+.iconbtn:active{transform:scale(.94)}
+.iconbtn svg{width:22px;height:22px;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* back button + page title, for screens below home */
+.backbtn{
+  display:inline-flex;align-items:center;gap:9px;flex:0 0 auto;
+  height:48px;padding:0 18px 0 14px;border-radius:12px;
+  border:1px solid var(--line);background:var(--card);color:var(--ink-2);
+  font-size:15px;font-weight:600;box-shadow:var(--sh-1);transition:.16s ease;
+}
+.backbtn:hover{border-color:#BFCFDA;box-shadow:var(--sh-2)}
+.backbtn:active{transform:scale(.97)}
+.backbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;
+  stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ===================== bottom bar ===================== */
+.botbar{
+  position:relative;z-index:3;flex:0 0 auto;
+  display:flex;align-items:center;gap:24px;padding:10px 24px;
+  background:rgba(255,255,255,.88);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-dim);
+}
+.st{display:inline-flex;align-items:center;gap:8px;font-weight:500;color:var(--ink-2)}
+.st .d{width:7px;height:7px;border-radius:50%;background:var(--ink-dim);flex:0 0 auto}
+.st.ok .d{background:var(--ok)}
+.st.warn .d{background:var(--warn)}
+.st.off .d{background:#9FB0BC}
+/* No status-dot animation on purpose. Animating box-shadow spread cost ~70%
+   of a core here and even a plain opacity pulse cost ~16%: with no GPU every
+   frame is a CPU repaint, forever. Liveness is carried by the fps readout and
+   by the feed itself. */
+.unit{font-family:var(--mono);font-size:11px;color:var(--ink-dim);letter-spacing:.04em}
+.by{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--ink-dim)}
+
+/* ===================== buttons ===================== */
+.btn{
+  font-family:var(--sans);font-size:15px;font-weight:600;
+  padding:14px 24px;border-radius:12px;border:1px solid var(--line);
+  background:var(--card);color:var(--ink-2);transition:.15s ease;
+}
+.btn:hover{border-color:#BFCFDA}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-lo);border-color:var(--brand-lo)}
+.btn.primary:disabled{background:#B9C7D1;border-color:#B9C7D1;color:#EEF3F6;
+  cursor:not-allowed;transform:none}
+.btn.danger{background:var(--fail);border-color:var(--fail);color:#fff}
+.btn+.btn{margin-left:11px}
+.btn.lg{font-size:15px;padding:14px 28px;border-radius:12px}
+
+/* ===================== overlays ===================== */
+.sheet{
+  position:fixed;inset:0;z-index:60;display:none;place-items:center;
+  background:rgba(13,25,34,.5);
+  -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+}
+.sheet.on{display:grid;animation:fade .18s ease}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.sheet .box{
+  background:var(--card);border-radius:20px;padding:36px 42px;text-align:center;
+  box-shadow:0 30px 80px rgba(13,25,34,.4);min-width:390px;
+  animation:pop .22s cubic-bezier(.2,.9,.3,1);
+}
+@keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
+.sheet h3{font-size:22px;font-weight:600;letter-spacing:-.4px}
+.sheet p{color:var(--ink-dim);font-size:13.5px;margin-top:10px}
+.sheet .k{
+  display:inline-block;margin-top:22px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--brand);
+  border:1px solid var(--line);border-radius:10px;padding:10px 18px;
+}
+
+/* ---------- power menu ----------
+   Needs .sheet .box.pm, not .pm: the generic .sheet .box rule centres text at
+   specificity 0,2,0 and would otherwise win over a bare class. */
+.sheet .box.pm{width:560px;padding:0;overflow:hidden;text-align:left}
+.pm header{
+  display:flex;align-items:center;gap:16px;
+  padding:20px 26px;border-bottom:1px solid var(--line-soft);
+}
+.pm header h3{font-size:20px;font-weight:600}
+.pm header .sub{font-family:var(--mono);font-size:10.5px;color:var(--ink-dim);
+  letter-spacing:.1em;text-transform:uppercase;margin-top:3px}
+.xbtn{
+  width:36px;height:36px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  border:0;background:transparent;color:var(--ink-2);cursor:pointer;transition:background .14s ease;
+}
+.xbtn:hover{background:var(--ground)}
+.xbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.opts{display:flex;flex-direction:column}
+/* Colour-coded circular badge per action, chevron on the right: the row reads
+   as a destination, and severity is legible before the text is. */
+.opt{
+  display:grid;grid-template-columns:42px 1fr 18px;gap:16px;align-items:center;
+  padding:15px 26px;background:var(--card);transition:background .14s ease;
+}
+.opt:hover,.opt:focus-visible{background:#F5F8FA;outline:none}
+.opt:focus-visible{box-shadow:inset 3px 0 0 var(--brand)}
+.opt .ic{
+  width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+  background:var(--brand);color:#fff;
+}
+.opt .ic svg{width:19px;height:19px;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.opt .t{font-size:15px;font-weight:600;line-height:1.25}
+.opt .d{font-size:12px;color:var(--ink-dim);margin-top:3px;line-height:1.45}
+.opt .chev{color:#A8B8C4}
+.opt .chev svg{width:18px;height:18px;fill:none;stroke:currentColor;
+  stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.opt[data-act="idle"]     .ic{background:var(--live)}
+.opt[data-act="restart"]  .ic{background:var(--ok)}
+.opt[data-act="sleep"]    .ic{background:#B07C12}
+.opt[data-act="reboot"]   .ic{background:var(--fail)}
+.opt[data-act="shutdown"] .ic{background:#1B2B38}
+.secthead{
+  padding:13px 26px;background:var(--ground);
+  border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+  font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-dim);
+}
+.pm footer{
+  padding:15px 26px;background:var(--ground);border-top:1px solid var(--line-soft);
+  display:flex;justify-content:flex-end;
+}
+.confirm{padding:30px 28px;text-align:center;display:none}
+.confirm.on{display:block}
+.opts.off,.pm header.off,.pm footer.off{display:none}
+.confirm h4{font-size:20px;font-weight:600;letter-spacing:-.35px}
+.confirm p{font-size:13px;color:var(--ink-dim);margin-top:10px;line-height:1.55}
+.confirm .row{display:flex;justify-content:center;margin-top:24px}
+.confirm .cd{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;
+  text-transform:uppercase;color:var(--ink-dim);margin-top:16px;
+}
+.err{
+  margin:0 28px 18px;padding:12px 15px;border-radius:11px;display:none;
+  background:var(--fail-soft);border:1px solid #E9C6C2;color:var(--fail);font-size:12.5px;
+}
+.err.on{display:block}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}

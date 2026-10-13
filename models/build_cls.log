@@ -1,0 +1,143 @@
+&&&& RUNNING TensorRT.trtexec [TensorRT v100300] # /usr/src/tensorrt/bin/trtexec --onnx=ppocr_cls.onnx --saveEngine=ppocr_cls.engine --fp16 --minShapes=x:1x3x48x32 --optShapes=x:1x3x48x192 --maxShapes=x:1x3x48x192
+[09/27/2026-20:43:23] [I] === Model Options ===
+[09/27/2026-20:43:23] [I] Format: ONNX
+[09/27/2026-20:43:23] [I] Model: ppocr_cls.onnx
+[09/27/2026-20:43:23] [I] Output:
+[09/27/2026-20:43:23] [I] === Build Options ===
+[09/27/2026-20:43:23] [I] Memory Pools: workspace: default, dlaSRAM: default, dlaLocalDRAM: default, dlaGlobalDRAM: default, tacticSharedMem: default
+[09/27/2026-20:43:23] [I] avgTiming: 8
+[09/27/2026-20:43:23] [I] Precision: FP32+FP16
+[09/27/2026-20:43:23] [I] LayerPrecisions: 
+[09/27/2026-20:43:23] [I] Layer Device Types: 
+[09/27/2026-20:43:23] [I] Calibration: 
+[09/27/2026-20:43:23] [I] Refit: Disabled
+[09/27/2026-20:43:23] [I] Strip weights: Disabled
+[09/27/2026-20:43:23] [I] Version Compatible: Disabled
+[09/27/2026-20:43:23] [I] ONNX Plugin InstanceNorm: Disabled
+[09/27/2026-20:43:23] [I] TensorRT runtime: full
+[09/27/2026-20:43:23] [I] Lean DLL Path: 
+[09/27/2026-20:43:23] [I] Tempfile Controls: { in_memory: allow, temporary: allow }
+[09/27/2026-20:43:23] [I] Exclude Lean Runtime: Disabled
+[09/27/2026-20:43:23] [I] Sparsity: Disabled
+[09/27/2026-20:43:23] [I] Safe mode: Disabled
+[09/27/2026-20:43:23] [I] Build DLA standalone loadable: Disabled
+[09/27/2026-20:43:23] [I] Allow GPU fallback for DLA: Disabled
+[09/27/2026-20:43:23] [I] DirectIO mode: Disabled
+[09/27/2026-20:43:23] [I] Restricted mode: Disabled
+[09/27/2026-20:43:23] [I] Skip inference: Disabled
+[09/27/2026-20:43:23] [I] Save engine: ppocr_cls.engine
+[09/27/2026-20:43:23] [I] Load engine: 
+[09/27/2026-20:43:23] [I] Profiling verbosity: 0
+[09/27/2026-20:43:23] [I] Tactic sources: Using default tactic sources
+[09/27/2026-20:43:23] [I] timingCacheMode: local
+[09/27/2026-20:43:23] [I] timingCacheFile: 
+[09/27/2026-20:43:23] [I] Enable Compilation Cache: Enabled
+[09/27/2026-20:43:23] [I] errorOnTimingCacheMiss: Disabled
+[09/27/2026-20:43:23] [I] Preview Features: Use default preview flags.
+[09/27/2026-20:43:23] [I] MaxAuxStreams: -1
+[09/27/2026-20:43:23] [I] BuilderOptimizationLevel: -1
+[09/27/2026-20:43:23] [I] Calibration Profile Index: 0
+[09/27/2026-20:43:23] [I] Weight Streaming: Disabled
+[09/27/2026-20:43:23] [I] Runtime Platform: Same As Build
+[09/27/2026-20:43:23] [I] Debug Tensors: 
+[09/27/2026-20:43:23] [I] Input(s)s format: fp32:CHW
+[09/27/2026-20:43:23] [I] Output(s)s format: fp32:CHW
+[09/27/2026-20:43:23] [I] Input build shape (profile 0): x=1x3x48x32+1x3x48x192+1x3x48x192
+[09/27/2026-20:43:23] [I] Input calibration shapes: model
+[09/27/2026-20:43:23] [I] === System Options ===
+[09/27/2026-20:43:23] [I] Device: 0
+[09/27/2026-20:43:23] [I] DLACore: 
+[09/27/2026-20:43:23] [I] Plugins:
+[09/27/2026-20:43:23] [I] setPluginsToSerialize:
+[09/27/2026-20:43:23] [I] dynamicPlugins:
+[09/27/2026-20:43:23] [I] ignoreParsedPluginLibs: 0
+[09/27/2026-20:43:23] [I] 
+[09/27/2026-20:43:23] [I] === Inference Options ===
+[09/27/2026-20:43:23] [I] Batch: Explicit
+[09/27/2026-20:43:23] [I] Input inference shape : x=1x3x48x192
+[09/27/2026-20:43:23] [I] Iterations: 10
+[09/27/2026-20:43:23] [I] Duration: 3s (+ 200ms warm up)
+[09/27/2026-20:43:23] [I] Sleep time: 0ms
+[09/27/2026-20:43:23] [I] Idle time: 0ms
+[09/27/2026-20:43:23] [I] Inference Streams: 1
+[09/27/2026-20:43:23] [I] ExposeDMA: Disabled
+[09/27/2026-20:43:23] [I] Data transfers: Enabled
+[09/27/2026-20:43:23] [I] Spin-wait: Disabled
+[09/27/2026-20:43:23] [I] Multithreading: Disabled
+[09/27/2026-20:43:23] [I] CUDA Graph: Disabled
+[09/27/2026-20:43:23] [I] Separate profiling: Disabled
+[09/27/2026-20:43:23] [I] Time Deserialize: Disabled
+[09/27/2026-20:43:23] [I] Time Refit: Disabled
+[09/27/2026-20:43:23] [I] NVTX verbosity: 0
+[09/27/2026-20:43:23] [I] Persistent Cache Ratio: 0
+[09/27/2026-20:43:23] [I] Optimization Profile Index: 0
+[09/27/2026-20:43:23] [I] Weight Streaming Budget: 100.000000%
+[09/27/2026-20:43:23] [I] Inputs:
+[09/27/2026-20:43:23] [I] Debug Tensor Save Destinations:
+[09/27/2026-20:43:23] [I] === Reporting Options ===
+[09/27/2026-20:43:23] [I] Verbose: Disabled
+[09/27/2026-20:43:23] [I] Averages: 10 inferences
+[09/27/2026-20:43:23] [I] Percentiles: 90,95,99
+[09/27/2026-20:43:23] [I] Dump refittable layers:Disabled
+[09/27/2026-20:43:23] [I] Dump output: Disabled
+[09/27/2026-20:43:23] [I] Profile: Disabled
+[09/27/2026-20:43:23] [I] Export timing to JSON file: 
+[09/27/2026-20:43:23] [I] Export output to JSON file: 
+[09/27/2026-20:43:23] [I] Export profile to JSON file: 
+[09/27/2026-20:43:23] [I] 
+[09/27/2026-20:43:23] [I] === Device Information ===
+[09/27/2026-20:43:23] [I] Available Devices: 
+[09/27/2026-20:43:23] [I]   Device 0: "Orin" UUID: GPU-6400e5f6-0982-5ef6-ace6-cc3dbe4aff8e
+[09/27/2026-20:43:23] [I] Selected Device: Orin
+[09/27/2026-20:43:23] [I] Selected Device ID: 0
+[09/27/2026-20:43:23] [I] Selected Device UUID: GPU-6400e5f6-0982-5ef6-ace6-cc3dbe4aff8e
+[09/27/2026-20:43:23] [I] Compute Capability: 8.7
+[09/27/2026-20:43:23] [I] SMs: 8
+[09/27/2026-20:43:23] [I] Device Global Memory: 7620 MiB
+[09/27/2026-20:43:23] [I] Shared Memory per SM: 164 KiB
+[09/27/2026-20:43:23] [I] Memory Bus Width: 128 bits (ECC disabled)
+[09/27/2026-20:43:23] [I] Application Compute Clock Rate: 1.02 GHz
+[09/27/2026-20:43:23] [I] Application Memory Clock Rate: 1.02 GHz
+[09/27/2026-20:43:23] [I] 
+[09/27/2026-20:43:23] [I] Note: The application clock rates do not reflect the actual clock rates that the GPU is currently running at.
+[09/27/2026-20:43:23] [I] 
+[09/27/2026-20:43:23] [I] TensorRT version: 10.3.0
+[09/27/2026-20:43:23] [I] Loading standard plugins
+[09/27/2026-20:43:23] [I] [TRT] [MemUsageChange] Init CUDA: CPU +2, GPU +0, now: CPU 31, GPU 3172 (MiB)
+[09/27/2026-20:43:26] [I] [TRT] [MemUsageChange] Init builder kernel library: CPU +928, GPU +740, now: CPU 1002, GPU 3963 (MiB)
+[09/27/2026-20:43:26] [I] Start parsing network model.
+[09/27/2026-20:43:26] [I] [TRT] ----------------------------------------------------------------
+[09/27/2026-20:43:26] [I] [TRT] Input filename:   ppocr_cls.onnx
+[09/27/2026-20:43:26] [I] [TRT] ONNX IR version:  0.0.7
+[09/27/2026-20:43:26] [I] [TRT] Opset version:    11
+[09/27/2026-20:43:26] [I] [TRT] Producer name:    PaddlePaddle
+[09/27/2026-20:43:26] [I] [TRT] Producer version: 
+[09/27/2026-20:43:26] [I] [TRT] Domain:           
+[09/27/2026-20:43:26] [I] [TRT] Model version:    0
+[09/27/2026-20:43:26] [I] [TRT] Doc string:       
+[09/27/2026-20:43:26] [I] [TRT] ----------------------------------------------------------------
+[09/27/2026-20:43:26] [I] Finished parsing network model. Parse time: 0.0568403
+[09/27/2026-20:43:26] [I] Set shape of input tensor x for optimization profile 0 to: MIN=1x3x48x32 OPT=1x3x48x192 MAX=1x3x48x192
+[09/27/2026-20:43:26] [W] [TRT] DLA requests all profiles have same min, max, and opt value. All dla layers are falling back to GPU
+[09/27/2026-20:43:26] [I] [TRT] Local timing cache in use. Profiling results in this builder pass will not be stored.
+[09/27/2026-20:46:25] [I] [TRT] Detected 1 inputs and 1 output network tensors.
+[09/27/2026-20:46:32] [I] [TRT] Total Host Persistent Memory: 385648
+[09/27/2026-20:46:32] [I] [TRT] Total Device Persistent Memory: 0
+[09/27/2026-20:46:32] [I] [TRT] Total Scratch Memory: 512
+[09/27/2026-20:46:32] [I] [TRT] [BlockAssignment] Started assigning block shifts. This will take 113 steps to complete.
+[09/27/2026-20:46:32] [I] [TRT] [BlockAssignment] Algorithm ShiftNTopDown took 4.80109ms to assign 6 blocks to 113 nodes requiring 63488 bytes.
+[09/27/2026-20:46:32] [I] [TRT] Total Activation Memory: 62976
+[09/27/2026-20:46:32] [I] [TRT] Total Weights Memory: 300960
+[09/27/2026-20:46:32] [I] [TRT] Engine generation completed in 185.705 seconds.
+[09/27/2026-20:46:32] [I] [TRT] [MemUsageStats] Peak memory usage of TRT CPU/GPU memory allocators: CPU 0 MiB, GPU 8 MiB
+[09/27/2026-20:46:32] [I] [TRT] [MemUsageStats] Peak memory usage during Engine building and serialization: CPU: 1567 MiB
+[09/27/2026-20:46:32] [I] Engine built in 185.815 sec.
+[09/27/2026-20:46:32] [I] Created engine with size: 1.18244 MiB
+[09/27/2026-20:46:32] [I] [TRT] Loaded engine size: 1 MiB
+[09/27/2026-20:46:32] [I] Engine deserialized in 0.0301341 sec.
+[09/27/2026-20:46:32] [I] [TRT] [MemUsageChange] TensorRT-managed allocation in IExecutionContext creation: CPU +0, GPU +0, now: CPU 0, GPU 0 (MiB)
+[09/27/2026-20:46:32] [I] Setting persistentCacheLimit to 0 bytes.
+[09/27/2026-20:46:32] [E] Error[3]: IExecutionContext::setInputShape: Error Code 3: API Usage Error (Parameter check failed, condition: engineDims.d[i] == dims.d[i]. Static dimension mismatch while setting input shape for x. Set dimensions are [1,3,48,192]. Expected dimensions are [1,3,48,48].)
+[09/27/2026-20:46:32] [E] The engine was built with static shapes for input tensor x but the provided shapes do not match the static shapes!
+[09/27/2026-20:46:32] [E] Inference set up failed
+&&&& FAILED TensorRT.trtexec [TensorRT v100300] # /usr/src/tensorrt/bin/trtexec --onnx=ppocr_cls.onnx --saveEngine=ppocr_cls.engine --fp16 --minShapes=x:1x3x48x32 --optShapes=x:1x3x48x192 --maxShapes=x:1x3x48x192

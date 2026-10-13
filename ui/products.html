@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ProInspect &middot; Select product</title>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="app.css">
+<style>
+  .work{
+    position:relative;z-index:1;flex:1;min-height:0;overflow-y:auto;padding:20px 24px 24px;
+  }
+  .lede{
+    font-size:13px;color:var(--ink-dim);margin-bottom:16px;
+  }
+  /* Fixed-width cards aligned left, not stretched to fill the row: with two
+     products a 4-up grid would blow each card up to fill dead space. */
+  .pgrid{
+    display:grid;gap:16px;align-content:start;
+    grid-template-columns:repeat(auto-fill,minmax(268px,290px));
+  }
+  .pcard{
+    position:relative;background:var(--card);border:1px solid var(--line);
+    border-radius:var(--r);box-shadow:var(--sh-1);overflow:hidden;
+    display:flex;flex-direction:column;
+    transition:border-color .15s ease, background .15s ease;
+    animation:rise .4s cubic-bezier(.2,.8,.3,1) backwards;
+  }
+  @keyframes rise{from{opacity:.4;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .pcard:hover{border-color:#9FB9CB}
+  .pcard.sel{border-color:var(--live);box-shadow:inset 0 0 0 1px var(--live),var(--sh-1)}
+  /* Pack shots arrive on white with wildly different aspect ratios, so the
+     frame is fixed and the image is contained inside it. */
+  .shot{
+    height:186px;flex:0 0 auto;background:#fff;overflow:hidden;
+    border-bottom:1px solid var(--line-soft);position:relative;
+  }
+  .shot img{
+    position:absolute;inset:14px;
+    width:calc(100% - 28px);height:calc(100% - 28px);
+    object-fit:contain;display:block;
+  }
+  .pbody{padding:15px 17px 17px;display:flex;flex-direction:column;flex:1}
+  .pname{font-size:16px;font-weight:600;letter-spacing:-.3px;line-height:1.2}
+  .ppack{font-size:12.5px;color:var(--ink-dim);margin-top:4px}
+  .pmeta{
+    font-family:var(--mono);font-size:10px;color:var(--ink-dim);
+    margin-top:10px;letter-spacing:.04em;
+  }
+  .prow{
+    margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft);
+    display:flex;align-items:center;gap:8px;
+  }
+  .count{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;
+    background:var(--ground);border:1px solid var(--line-soft);color:var(--ink-dim);
+    padding:4px 9px;border-radius:6px;
+  }
+  .where{font-size:11.5px;color:var(--ink-dim);flex:1;text-align:right}
+  .tick{
+    position:absolute;top:12px;right:12px;width:26px;height:26px;border-radius:50%;
+    background:var(--live);color:#fff;display:none;place-items:center;
+    box-shadow:0 2px 6px rgba(13,25,34,.25);
+  }
+  .pcard.sel .tick{display:grid}
+  .tick svg{width:15px;height:15px;fill:none;stroke:currentColor;
+    stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+  .empty{padding:60px;text-align:center;color:var(--ink-dim);font-size:13.5px}
+
+  .actionbar{
+    flex:0 0 auto;display:flex;align-items:center;gap:18px;
+    padding:13px 24px;background:var(--card);border-top:1px solid var(--line);
+    position:relative;z-index:2;
+  }
+  .summary{flex:1;min-width:0}
+  .summary .l{
+    font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;
+    text-transform:uppercase;color:var(--ink-dim);
+  }
+  .summary .v{font-size:14px;font-weight:600;margin-top:3px;letter-spacing:-.2px}
+  .summary .v.none{color:var(--ink-dim);font-weight:400}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="backbtn" href="index.html">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>Home
+  </a>
+  <div class="rule"></div>
+  <div class="station">
+    <div class="t">Inspection Dashboard</div>
+    <div class="s">Step 1 of 2 &middot; product on the conveyor</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="brand">
+    <img class="logo" id="logo" src="logo-icon.png" alt="">
+    <div class="wm">Pro<span>Inspect</span></div>
+  </div>
+  <div class="rule"></div>
+  <div class="clock"><div class="hm" id="hm">--:--</div><div class="dt" id="dt">&mdash;</div></div>
+  <div class="iconbtn pwr" data-power tabindex="0" role="button" aria-label="Power">
+    <svg viewBox="0 0 24 24"><path d="M12 3v9"/><path d="M6.3 6.3a8 8 0 1 0 11.4 0"/></svg>
+  </div>
+</div>
+
+<div class="work">
+  <div class="lede">Select the product currently running on the line.</div>
+  <div class="pgrid" id="pgrid"></div>
+</div>
+
+<div class="actionbar">
+  <div class="summary">
+    <div class="l">Selected</div>
+    <div class="v none" id="sumText">No product selected</div>
+  </div>
+  <button class="btn" id="btnCancel">Cancel</button>
+  <button class="btn primary lg" id="btnNext" disabled>Choose recipe</button>
+</div>
+
+<div class="botbar">
+  <span class="st warn"><span class="d"></span>Camera idle</span>
+  <span class="st off"><span class="d"></span>Dashboard offline</span>
+  <span class="unit" id="unit">&mdash;</span>
+  <span class="spacer"></span>
+  <span class="by">ProInspect Systems &middot; <span id="ver">v0.1.0</span></span>
+</div>
+
+<script src="app.js"></script>
+<script>
+(function(){
+  'use strict';
+  var products = [], sel = null;
+
+  function esc(s){
+    return String(s).replace(/[&<>"]/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];
+    });
+  }
+
+  function render(){
+    var host = document.getElementById('pgrid');
+    if (!products.length){
+      host.innerHTML = '<div class="empty">No products in the catalogue yet.</div>';
+      return;
+    }
+    host.innerHTML = products.map(function(p, i){
+      var n = p.recipes.length;
+      return '<div class="pcard" tabindex="0" data-pid="'+esc(p.id)+'" ' +
+             'style="animation-delay:'+(i*0.05)+'s">' +
+        '<div class="tick"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div>' +
+        '<div class="shot"><img src="'+esc(p.image)+'" alt="'+esc(p.name)+'"></div>' +
+        '<div class="pbody">' +
+          '<div class="pname">'+esc(p.name)+'</div>' +
+          '<div class="ppack">'+esc(p.pack)+' &middot; '+esc(p.substrate)+'</div>' +
+          '<div class="pmeta">'+esc(p.sku)+' &middot; '+esc(p.id)+'</div>' +
+          '<div class="prow">' +
+            '<span class="count">'+n+' recipe'+(n===1?'':'s')+'</span>' +
+            '<span class="where">Code: '+esc(p.code_location)+'</span>' +
+          '</div>' +
+        '</div></div>';
+    }).join('');
+
+    host.querySelectorAll('.pcard').forEach(function(el){
+      function pick(){ select(el.dataset.pid); }
+      el.addEventListener('click', pick);
+      el.addEventListener('dblclick', function(){ select(el.dataset.pid); next(); });
+      el.addEventListener('keydown', function(e){
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(); }
+      });
+    });
+  }
+
+  function select(pid){
+    sel = products.filter(function(p){ return p.id === pid; })[0] || null;
+    document.querySelectorAll('.pcard').forEach(function(el){
+      el.classList.toggle('sel', el.dataset.pid === pid);
+    });
+    var t = document.getElementById('sumText'), b = document.getElementById('btnNext');
+    if (sel){
+      t.textContent = sel.name + '  —  ' + sel.pack;
+      t.classList.remove('none'); b.disabled = false;
+    } else {
+      t.textContent = 'No product selected'; t.classList.add('none'); b.disabled = true;
+    }
+  }
+
+  function next(){
+    if (sel) location.href = 'recipes.html?product=' + encodeURIComponent(sel.id);
+  }
+  document.getElementById('btnNext').addEventListener('click', next);
+  document.getElementById('btnCancel').addEventListener('click', function(){
+    location.href = 'index.html';
+  });
+
+  fetch('data/products.json')
+    .then(function(r){ return r.json(); })
+    .then(function(d){ products = d.products || []; render(); })
+    .catch(function(e){
+      document.getElementById('pgrid').innerHTML =
+        '<div class="empty">Could not load the product catalogue.<br>'+esc(e.message)+'</div>';
+    });
+})();
+</script>
+</body>
+</html>
